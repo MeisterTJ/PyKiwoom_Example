@@ -8,4 +8,4 @@ class Kiwoom(QWidget, metaclass=Singleton):     # QMainWindow : PyQt5에서 윈�
 
         print("로그인 프로그램을 실행합니다.")
         super().__init__(parent, **kwargs)
-        self.kiwoom = QAxWidget('KHOPENAPI.KHOpenAPICtrl.1')  # CLSID
+        self.ocx = QAxWidget('KHOPENAPI.KHOpenAPICtrl.1')  # CLSID
