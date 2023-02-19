@@ -16,14 +16,24 @@ class Thread2(QThread):
         self.gui = gui
         self.kiwoom = Kiwoom()
 
+        # 기관매매추이동향을 위한 변수들
         self.Find_Down_Screen = "1200"  # 50개가 넘어가면 스크린 번호를 1201로 바꾸어야 한다.
         self.codeInAll = None  # 계좌에 있는 종목 코드를 임시로 저장하는 객체이다.
+
+        # 일봉차트를 위한 변수
+        self.DayChart_Screen = "1400"
+        self.day_chart_data = []  # 받아온 종목의 다양한 값 (현재가/고가/저가 등)을 계산한다.
+        self.day_chart_filter = []  # 역배열인지 확인
+        self.day_chart_current_price = []  # 미래예측
 
         self.kiwoom.ocx.OnReceiveTrData.connect(self.res_tr_data)  # Tr요청시 결과 이벤트를 받을 함수를 연결해준다.
         self.eventLoop = QEventLoop()  # 계좌 조회 이벤트 루프
 
         # 종목별 기관매매추이 요청 및 위험도 검사
         self.req_company_foreign_sales_by_stock()
+
+        # 역배열 평가
+        self.req_evaluate_inverse_arrangement()
 
         # 결과 GUI에 출력
         column_head = ["종목코드", "종목명", "위험도"]
@@ -37,6 +47,7 @@ class Thread2(QThread):
             self.gui.stockWarningTable.setItem(index, 0, QTableWidgetItem(str(code)))
             self.gui.stockWarningTable.setItem(index, 1, QTableWidgetItem(self.kiwoom.accPortfolio[code]["종목명"]))
             self.gui.stockWarningTable.setItem(index, 2, QTableWidgetItem(self.kiwoom.accPortfolio[code]["위험도"]))
+            self.gui.stockWarningTable.setItem(index, 3, QTableWidgetItem(self.kiwoom.accPortfolio[code]["역배열"]))
 
     def req_company_foreign_sales_by_stock(self):
         code_list = []
@@ -76,6 +87,44 @@ class Thread2(QThread):
                                         self.Find_Down_Screen)
             self.eventLoop.exec_()
 
+    # 기관, 외국인 매매 동향으로 계좌위험도 판단 함수를 코딩.
+    def evaluate_warning(self, companyData, foreignData):
+        # 10일치의 데이터중 4일치만 판단하는 간단한 로직
+        if companyData[0] < 0 and companyData[1] < 0 and companyData[2] < 0 and companyData[3] < 0 \
+                and foreignData[0] < 0 and foreignData[1] < 0 and foreignData[2] < 0 and foreignData[3] < 0:
+            self.k.acc_portfolio[self.code_in_all].update({"위험도": "손절"})
+
+        elif companyData[0] < 0 and companyData[1] < 0 and companyData[2] < 0 \
+                and foreignData[0] < 0 and foreignData[1] < 0 and foreignData[2] < 0:
+            self.k.acc_portfolio[self.code_in_all].update({"위험도": "주의"})
+
+        elif companyData[0] < 0 and companyData[1] < 0 and foreignData[0] < 0 and foreignData[1] < 0:
+            self.k.acc_portfolio[self.code_in_all].update({"위험도": "관심"})
+        else:
+            self.k.acc_portfolio[self.code_in_all].update({"위험도": "낮음"})
+
+    # 역배열 평가 함수
+    def req_evaluate_inverse_arrangement(self):
+        code_list = []
+        for code in self.kiwoom.accPortfolio.keys():
+            code_list.append(code)
+
+        print("계좌 종목 개수 %s" % code_list)
+
+        for index, code in enumerate(code_list):
+            QTest.qWait(1000)
+            self.codeInAll = code
+
+            print("%s 종목 검사 중 코드 : %s" % (index + 1, self.codeInAll))
+
+            self.kiwoom.ocx.dynamicCall("DisconnectRealData(QString)", self.DayChart_Screen)
+            self.kiwoom.ocx.dynamicCall("SetInputValue(QString, QString)", "종목코드", code)
+            self.kiwoom.ocx.dynamicCall("SetInputValue(QString, QString)", "수정주가구분", "1")  # 0: 액면분할 포함X, 1: 액면분할 포함
+            self.kiwoom.ocx.dynamicCall("CommRqData(QString, QString, int, QString)", "주식일봉차트조회", "opt10081", "0",
+                                        self.DayChart_Screen)
+            self.eventLoop.exec_()
+
+    # tr 결과
     def res_tr_data(self, screenNo: str, rqName: str, trCode: str, recordName: str, prevNext: str):
         if rqName == "종목별기관매매추이요청":
             row_count = self.kiwoom.ocx.dynamicCall("GetRepeatCnt(QString, QString)", trCode,
@@ -113,21 +162,74 @@ class Thread2(QThread):
                 self.FluctuationRateData.append(float(fluctuation_rate.strip()))
 
             # 위험도 계산 함수 호출
-            self.calculate_warning(self.companyTradePerDayData, self.foreignTradePerDayData)
+            self.evaluate_warning(self.companyTradePerDayData, self.foreignTradePerDayData)
             self.eventLoop.exit()
 
-    # 기관, 외국인 매매 동향으로 계좌위험도 판단 함수를 코딩.
-    def calculate_warning(self, companyData, foreignData):
-        # 10일치의 데이터중 4일치만 판단하는 간단한 로직
-        if companyData[0] < 0 and companyData[1] < 0 and companyData[2] < 0 and companyData[3] < 0 \
-                and foreignData[0] < 0 and foreignData[1] < 0 and foreignData[2] < 0 and foreignData[3] < 0:
-            self.k.acc_portfolio[self.code_in_all].update({"위험도": "손절"})
+        elif rqName == "주식일봉차트조회":
+            code = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", trCode, rqName, 0, "종목코드")
+            code = code.strip()  # 여백 발생 방지
+            row_count = self.kiwoom.ocx.dynamicCall("GetRepeatCnt(QString, QString)", trCode, rqName)
 
-        elif companyData[0] < 0 and companyData[1] < 0 and companyData[2] < 0 \
-                and foreignData[0] < 0 and foreignData[1] < 0 and foreignData[2] < 0:
-            self.k.acc_portfolio[self.code_in_all].update({"위험도": "주의"})
+            # GetCommDataEx를 쓰면 for문을 쓰지 않고 멀티데이터를 다 받아올 수 있으나 학습 목적으로 for문 사용
 
-        elif companyData[0] < 0 and companyData[1] < 0 and foreignData[0] < 0 and foreignData[1] < 0:
-            self.k.acc_portfolio[self.code_in_all].update({"위험도": "관심"})
-        else:
-            self.k.acc_portfolio[self.code_in_all].update({"위험도": "낮음"})
+            for index in range(row_count):  # 0 ~ 599 : 최대 600일치가 넘어온다.
+                data = []
+                current_price = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", trCode,
+                                                            rqName, index, "현재가")
+                trade_amount = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", trCode,
+                                                           rqName, index, "거래량")
+                trade_total_price = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", trCode,
+                                                                rqName, index, "거래대금")
+                date = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", trCode, rqName, index,
+                                                   "일자")  # 접수, 확인, 체결
+                start_price = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", trCode, rqName,
+                                                          index, "시가")
+                high_price = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", trCode, rqName,
+                                                         index, "고가")
+                low_price = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", trCode, rqName,
+                                                        index, "저가")
+
+                data.append("")  # 빈칸을 만들어주는 이유는 GetCommDataEx 함수의 반환값과 동일하게 하기 위해서
+                data.append(current_price.strip())
+                data.append(trade_amount.strip())
+                data.append(trade_total_price.strip())
+                data.append(date.strip())
+                data.append(start_price.strip())
+                data.append(high_price.strip())
+                data.append(low_price.strip())
+                data.append("")
+
+                self.day_chart_current_price.append(int(current_price.strip()))
+                self.day_chart_data.append(data.copy())  # 리스트로 데이터가 들어간다.
+
+            if self.day_chart_data is None or len(self.day_chart_data) < 120:
+                self.kiwoom.accPortfolio[self.codeInAll].update({"역배열": "데이터 없음"})
+            else:
+                total_five_price = []
+                total_twenty_price = []
+
+                for k in range(10):
+                    # 5일 이평선 정보를 채워넣는다.
+                    total_five_price.append(sum(self.day_chart_current_price[k: 5 + k]) / 5)
+                for k in range(10):
+                    # 20일 이평선 정보를 채워넣는다.
+                    total_twenty_price.append(sum(self.day_chart_current_price[k: 20 + k]) / 20)
+
+                add_item = 0
+
+                # 현재가 < 20일 이평선, 5일선 < 20일선일경우 역으로 판단, 8개 이상일 경우 역배열로 판단한다.
+                for k in range(10):
+                    if float(total_five_price[k]) < float(total_twenty_price[k]) \
+                            and float(self.day_chart_current_price[k]) < float(total_twenty_price[k]):
+                        add_item += 1
+                    else:
+                        pass
+
+                if add_item >= 8:
+                    self.kiwoom.accPortfolio[self.codeInAll].update({"역배열": "맞음"})
+                else:
+                    self.kiwoom.accPortfolio[self.codeInAll].update({"역배열": "아님"})
+
+            self.day_chart_data.clear()
+            self.day_chart_current_price.clear()
+            self.eventLoop.exit()
