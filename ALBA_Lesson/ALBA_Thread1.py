@@ -2,7 +2,7 @@ from PyQt5.QtCore import *  # 쓰레드 함수를 불러온다.
 from ALBA_Kiwoom import Kiwoom
 from PyQt5.QtWidgets import *
 
-
+# opw00018 계좌평가잔고내역요청
 class Thread1(QThread):
     def __init__(self, gui):
         super().__init__(gui)
@@ -11,7 +11,7 @@ class Thread1(QThread):
         self.Acc_Screen = 1000  # 스크린은 1~9999까지 총 9999개가 존재하며 1개당 50개의 데이터를 저장할 수 있는 주머니이다.
 
         self.kiwoom.ocx.OnReceiveTrData.connect(self.resTrData)  # Tr요청시 결과 이벤트를 받을 함수를 연결해준다. 
-        self.detail_account_info_event_loop = QEventLoop()  # 계좌 조회 이벤트 루프
+        self.eventLoop = QEventLoop()  # 계좌 조회 이벤트 루프
 
         self.getItemList()          # 전체 종목 리스트 가져오기.
         self.reqAccountDetail()
@@ -43,7 +43,7 @@ class Thread1(QThread):
         # 1 : 하고싶은 이름, 2: 요청, 3: 30개 이상일 경우 2 입력?, 4: 화면번호
         self.kiwoom.ocx.dynamicCall("CommRqData(String, String, int, String)"
                                     , "계좌평가잔고내역요청", "opw00018", prevNext, self.Acc_Screen)
-        self.detail_account_info_event_loop.exec_()
+        self.eventLoop.exec_()
 
     # TR 결과
     def resTrData(self, screenNo:str, rqName:str, trCode:str, recordName:str, prevNext:str):
@@ -117,4 +117,4 @@ class Thread1(QThread):
             if prevNext == "2":
                 self.reqAccountDetail(prevNext="2")         # 다음 페이지가 있으면 전부 검색한다
             else:
-                self.detail_account_info_event_loop.exit()  # 끊어 준다.
+                self.eventLoop.exit()  # 끊어 준다.
