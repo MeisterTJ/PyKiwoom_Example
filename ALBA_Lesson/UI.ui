@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1691</width>
+    <width>1594</width>
     <height>879</height>
    </rect>
   </property>
@@ -135,7 +135,7 @@
    <widget class="QPushButton" name="accManageBtn">
     <property name="geometry">
      <rect>
-      <x>1120</x>
+      <x>1070</x>
       <y>10</y>
       <width>400</width>
       <height>40</height>
@@ -145,12 +145,12 @@
      <string>계좌 관리</string>
     </property>
    </widget>
-   <widget class="QTableWidget" name="stockListTable2">
+   <widget class="QTableWidget" name="stockWarningTable">
     <property name="geometry">
      <rect>
       <x>960</x>
       <y>60</y>
-      <width>721</width>
+      <width>621</width>
       <height>731</height>
      </rect>
     </property>
@@ -161,7 +161,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1691</width>
+     <width>1594</width>
      <height>38</height>
     </rect>
    </property>
