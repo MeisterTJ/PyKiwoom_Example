@@ -20,6 +20,8 @@ class Kiwoom(QAxWidget):
         self.universe_realtime_transaction_info = {}
 
     def _make_kiwoom_instance(self):
+        # setControl은 QAxContainer.py 에 있는 함수
+        # Open API를 설치하면 우리 컴퓨터에 설치되는 API 식별자. 레지스트리에 ProgID로 등록되어 있다.
         self.setControl("KHOPENAPI.KHOpenAPICtrl.1")
 
     def _set_signal_slots(self):
