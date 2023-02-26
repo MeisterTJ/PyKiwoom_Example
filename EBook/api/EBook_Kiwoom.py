@@ -354,7 +354,8 @@ class Kiwoom(QAxWidget):
     # 데이터를 수신할 종목을 등록하는 과정에서 한 번에 여러 종목을 등록할 수 없는 문제가 있다.
     # 그렇기 때문에 SetRealReg를 사용한다.
     # std_fid_list : 실시간 체결 정보 중 제공받을 항목에 해당하는 fid들을 의미한다.
-    # str_opt_type : 최초 등록인지 추가 등록인지를 전달한다. 0을 전달하면 기존의 등록정보는 삭제된다. 
+    #                현재는 fid 값을 어느것이든 하나만 전달하면 모든 데이터들을 함께 얻어 올 수 있다. 
+    # str_opt_type : 최초 등록인지 추가 등록인지를 전달한다. 0을 전달하면 기존의 등록정보는 삭제된다.
     def set_real_reg(self, str_screen_no, str_code_list, str_fid_list, str_opt_type):
         self.dynamicCall("SetRealReg(QString, QString, QString, QString)", str_screen_no, str_code_list, str_fid_list, str_opt_type)
         time.sleep(0.5)
