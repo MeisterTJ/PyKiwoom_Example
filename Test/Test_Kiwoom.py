@@ -323,7 +323,7 @@ class Kiwoom(QAxWidget):
             print("* 잔고 출력(self.balance)")
             print(self.balance)
 
-    # 당일 접수한 주문, 미체결 주문을 조회한다. 
+    # 당일 접수한 주문, 미체결 주문을 조회한다.
     def get_order(self):
         self.dynamicCall("SetInputValue(QString, QString)", "계좌번호", self.account_number)
         self.dynamicCall("SetInputValue(QString, QString)", "전체종목구분", "0")
@@ -354,7 +354,7 @@ class Kiwoom(QAxWidget):
     # 데이터를 수신할 종목을 등록하는 과정에서 한 번에 여러 종목을 등록할 수 없는 문제가 있다.
     # 그렇기 때문에 SetRealReg를 사용한다.
     # std_fid_list : 실시간 체결 정보 중 제공받을 항목에 해당하는 fid들을 의미한다.
-    # str_opt_type : 최초 등록인지 추가 등록인지를 전달한다. 0을 전달하면 기존의 등록정보는 삭제된다. 
+    # str_opt_type : 최초 등록인지 추가 등록인지를 전달한다. 0을 전달하면 기존의 등록정보는 삭제된다.
     def set_real_reg(self, str_screen_no, str_code_list, str_fid_list, str_opt_type):
         self.dynamicCall("SetRealReg(QString, QString, QString, QString)", str_screen_no, str_code_list, str_fid_list, str_opt_type)
         time.sleep(0.5)
