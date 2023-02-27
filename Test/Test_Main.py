@@ -21,6 +21,8 @@ class Test_Main():
         self.ui.setupUi(self.window)
         self.ui.btn_searchbycodename.clicked.connect(self.onclicked_search_by_codename)
         self.ui.btn_opw00001.clicked.connect(self.onclicked_opw00001)
+        self.ui.btn_opw00018.clicked.connect(self.onclicked_opw00018)
+        self.ui.btn_opt10075.clicked.connect(self.onclicked_opt10075)
 
         self.window.show()
 
@@ -35,6 +37,9 @@ class Test_Main():
 
     def onclicked_opw00018(self):
         self.kiwoom.get_balance()
+
+    def onclicked_opt10075(self):
+        self.kiwoom.get_order()
 
     def onclicked_search_by_codename(self):
         Model = QtGui.QStandardItemModel(self.ui.list_codename)

@@ -3,6 +3,7 @@ from PyQt5.QtCore import *
 import time
 import pandas as pd
 from EBook.util.EBook_Const import *
+from collections import deque
 
 class Kiwoom(QAxWidget):
     def __init__(self):
@@ -27,6 +28,7 @@ class Kiwoom(QAxWidget):
         self.order = {}
         self.balance = {}
         self.universe_realtime_transaction_info = {}
+        self.real_data_queue = deque(maxlen=10)
 
     def _make_kiwoom_instance(self):
         # setControl은 QAxContainer.py 에 있는 함수
@@ -161,6 +163,8 @@ class Kiwoom(QAxWidget):
 
         # 미체결 및 주문 내역 요청
         elif rqname == "opt10075_req":
+            print("------------------------------------")
+            print("opt10075(주문내역요청)")
             for i in range(tr_data_cnt):
                 code = self.dynamicCall("GetCommData(QString, QString, int, QString", trcode, rqname, i, "종목코드")
                 code_name = self.dynamicCall("GetCommData(QString, QString, int, QString", trcode, rqname, i, "종목명")
@@ -213,6 +217,9 @@ class Kiwoom(QAxWidget):
                     '당일매매수수료': fee,
                     '당일매매세금': tax
                 }
+                print(self.order[code])
+
+            print("------------------------------------")
 
             self.tr_data = self.order
 
@@ -426,3 +433,5 @@ class Kiwoom(QAxWidget):
                 "(최우선)매수호가": top_priority_bid,
                 "누적거래량": accum_volume
             })
+
+            self.real_data_queue.append(self.universe_realtime_transaction_info[s_code])

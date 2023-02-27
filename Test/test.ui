@@ -65,7 +65,7 @@
      <rect>
       <x>220</x>
       <y>30</y>
-      <width>261</width>
+      <width>264</width>
       <height>61</height>
      </rect>
     </property>
@@ -92,6 +92,19 @@
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>240</y>
+      <width>168</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>보유종목실시간체결정보 수신</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
