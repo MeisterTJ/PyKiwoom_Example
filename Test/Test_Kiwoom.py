@@ -12,9 +12,18 @@ class Kiwoom(QAxWidget):
         self._comm_connect()
 
         self.account_number = self.get_account_number()
+        self.code_list = self.get_code_list_by_market("0") + self.get_code_list_by_market("10")
+
+        self.name_to_code = {}
+
+        for code in self.code_list:
+            self.name_to_code[self.get_master_code_name(code)] = code
+
+        for key, value in self.name_to_code.items():
+            print("%s : %s" % (key, value))
+
 
         self.tr_event_loop = QEventLoop()
-
         self.order = {}
         self.balance = {}
         self.universe_realtime_transaction_info = {}
@@ -140,9 +149,15 @@ class Kiwoom(QAxWidget):
         # 예수금상세현황요청
         elif rqname == "opw00001_req":
             # 에수금과 주문가능금액은 다른 금액이지만, 실제 주식매수할 때 쓸 수 있는 주문가능금액을 사용한다.
-            deposit = self.dynamicCall("GetCommData(QString, QString, int, QString", trcode, rqname, 0, "주문가능금액")
-            self.tr_data = int(deposit)
-            print(self.tr_data)
+            deposit = self.dynamicCall("GetCommData(QString, QString, int, QString", trcode, rqname, 0, "예수금")
+            orderableamount = self.dynamicCall("GetCommData(QString, QString, int, QString", trcode, rqname, 0, "주문가능금액")
+            print("----------------------------------------")
+            print("opw00001(예수금상세현황요청)")
+            print("예수금 : ", int(deposit))
+            print("주문가능금액 : ", int(orderableamount))
+            print("----------------------------------------")
+            self.tr_data = int(orderableamount)
+            #print(self.tr_data)
 
         # 미체결 및 주문 내역 요청
         elif rqname == "opt10075_req":
@@ -236,6 +251,12 @@ class Kiwoom(QAxWidget):
                 }
 
             self.tr_data = self.balance
+            print("-------------------------------------")
+            print("opw00018(계좌평가잔고내역요청)")
+            for key, value in self.balance.items():
+                print(key + " : " + self.balance[key])
+            print("-------------------------------------")
+
 
         self.tr_event_loop.exit()
         # 1초에 최대 5회의 요청만 허용하는 정책 때문에 여유있게 0.5초의 대기 시간을 두었다.
