@@ -26,7 +26,6 @@ class Test_Main():
 
         self.window.show()
 
-
         # 다크 테마 적용
         self.window.setStyleSheet(qdarkstyle.load_stylesheet_pyside2())
 
@@ -35,12 +34,15 @@ class Test_Main():
     def onclicked_opw00001(self):
         self.kiwoom.get_deposit()
 
+    # 종목 잔고 평가 얻어오기.
     def onclicked_opw00018(self):
         self.kiwoom.get_balance()
 
+    # 미체결 주문 내역 얻어오기
     def onclicked_opt10075(self):
         self.kiwoom.get_order()
 
+    # 종목 이름으로 코드 얻어오기.
     def onclicked_search_by_codename(self):
         Model = QtGui.QStandardItemModel(self.ui.list_codename)
         for key, value in self.kiwoom.name_to_code.items():
