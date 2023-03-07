@@ -92,16 +92,16 @@ class Thread2(QThread):
         # 10일치의 데이터중 4일치만 판단하는 간단한 로직
         if companyData[0] < 0 and companyData[1] < 0 and companyData[2] < 0 and companyData[3] < 0 \
                 and foreignData[0] < 0 and foreignData[1] < 0 and foreignData[2] < 0 and foreignData[3] < 0:
-            self.k.acc_portfolio[self.code_in_all].update({"위험도": "손절"})
+            self.kiwoom.accPortfolio[self.codeInAll].update({"위험도": "손절"})
 
         elif companyData[0] < 0 and companyData[1] < 0 and companyData[2] < 0 \
                 and foreignData[0] < 0 and foreignData[1] < 0 and foreignData[2] < 0:
-            self.k.acc_portfolio[self.code_in_all].update({"위험도": "주의"})
+            self.kiwoom.accPortfolio[self.codeInAll].update({"위험도": "주의"})
 
         elif companyData[0] < 0 and companyData[1] < 0 and foreignData[0] < 0 and foreignData[1] < 0:
-            self.k.acc_portfolio[self.code_in_all].update({"위험도": "관심"})
+            self.kiwoom.accPortfolio[self.codeInAll].update({"위험도": "관심"})
         else:
-            self.k.acc_portfolio[self.code_in_all].update({"위험도": "낮음"})
+            self.kiwoom.accPortfolio[self.codeInAll].update({"위험도": "낮음"})
 
     # 역배열 평가 함수
     def req_evaluate_inverse_arrangement(self):
@@ -136,7 +136,6 @@ class Thread2(QThread):
             self.FluctuationRateData = []
 
             for index in range(row_count):  #
-
                 company_trade_amount_per_day = (
                     self.kiwoom.ocx.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, index,
                                                 "기관일별순매매수량"))
@@ -144,15 +143,15 @@ class Thread2(QThread):
                     self.kiwoom.ocx.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, 0,
                                                 "기관추정평균가"))
                 foreign_trade_amount_per_day = (
-                    self.k.kiwoom.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, index,
+                    self.kiwoom.ocx.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, index,
                                               "외인일별순매매수량"))
                 foreign_estimate_avg_price = (
-                    self.k.kiwoom.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, 0,
+                    self.kiwoom.ocx.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, 0,
                                               "외인추정평균가"))
                 fluctuation_rate = (
-                    self.k.kiwoom.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, index, "등락율"))
+                    self.kiwoom.ocx.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, index, "등락율"))
                 closing_price = (
-                    self.k.kiwoom.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, index, "종가"))
+                    self.kiwoom.ocx.dynamicCall("GetCommData(String, String, int, String)", trCode, rqName, index, "종가"))
 
                 self.companyTradePerDayData.append(int(company_trade_amount_per_day.strip()))
                 self.foreignTradePerDayData.append(abs(int(foreign_trade_amount_per_day.strip())))
