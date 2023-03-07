@@ -260,8 +260,9 @@ class Kiwoom(QAxWidget):
             self.tr_data = self.balance
             print("-------------------------------------")
             print("opw00018(계좌평가잔고내역요청)")
+            #print(self.balance)
             for key, value in self.balance.items():
-                print(key + " : " + self.balance[key])
+                print(str(key) + " : " + str(value))
             print("-------------------------------------")
 
 
