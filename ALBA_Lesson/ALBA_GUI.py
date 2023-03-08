@@ -16,8 +16,10 @@ form_class = uic.loadUiType("UI.ui")[0]  # 만들어 놓은 ui 불러오기
 
 class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에서 윈도우 생성시 필요한 함수
 
-    def __init__(self, *args, **kwargs):  # Main class의 self를 초기화 한다.
+    searchItemEdit: QTextEdit
+    addItemBtn: QPushButton
 
+    def __init__(self, *args, **kwargs):  # Main class의 self를 초기화 한다.
         print("Login Machine 실행합니다.")
         super(Login_Machine, self).__init__(*args, **kwargs)
         form_class.__init__(self)               # 상속 받은 from_class를 실행하기 위한 초기값(초기화)
@@ -28,7 +30,7 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         self.kiwoom = Kiwoom()
         self.set_signal_slot()  # 키움로그인을 위한 명령어 전송시 받는 공간을 미리 생성한다.
         self.signal_login_commConnect()
-
+        self.kiwoom.ocx.OnReceiveTrData.connect(self.res_tr_data)
 
     def setUI(self):
         self.setupUi(self)                       # UI 초기값 셋업
@@ -39,6 +41,9 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         self.accLabel5.setText(str("총수익률(%)"))
         self.reqAccBtn.clicked.connect(self.runThread1)
         self.accManageBtn.clicked.connect(self.runThread2)
+
+        # 종목 선택하기 : 새로운 종목 추가 및 삭제
+        self.addItemBtn.clicked.connect(self.search_item)
 
     def set_signal_slot(self):
         self.kiwoom.ocx.OnEventConnect.connect(self.login_slot)  # 커넥트 결과를 login_slot 함수로 전달
@@ -79,6 +84,22 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         print("계좌 관리")
         h2 = Thread2(self)
         h2.start()
+
+    def search_item(self):
+        item_name: str = self.searchItemEdit.toPlainText()
+        if item_name != "":
+            for code in self.kiwoom.All_Stock_Code.keys():
+                # 주식 정보 가져오기
+                if item_name == self.kiwoom.All_Stock_Code[code]['종목명']:
+                    self.new_code = code
+
+        column_head = ["종목코드", "종목명", "현재가", "신용비율"]
+        col_count = len(column_head)
+        row_count = self.buy
+
+    def res_tr_data(self):
+
+
 
 if __name__ == '__main__':                  # import된 것들을 실행시키지 않고 __main__에서 실행하는 것만 실행 시킨다.
                                             # 즉 import된 다른 함수의 코드를 이 화면에서 실행시키지 않겠다는 의미이다.
