@@ -16,8 +16,9 @@ form_class = uic.loadUiType("UI.ui")[0]  # 만들어 놓은 ui 불러오기
 
 class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에서 윈도우 생성시 필요한 함수
 
-    searchItemEdit: QTextEdit
+    searchItemTextEdit: QTextEdit
     addItemBtn: QPushButton
+    buylistTable: QTableWidget
 
     def __init__(self, *args, **kwargs):  # Main class의 self를 초기화 한다.
         print("Login Machine 실행합니다.")
@@ -44,6 +45,12 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
 
         # 종목 선택하기 : 새로운 종목 추가 및 삭제
         self.addItemBtn.clicked.connect(self.search_item)
+        column_head = ["종목코드", "종목명", "현재가", "신용비율"]
+        col_count = len(column_head)
+        # 행 갯수
+        self.buylistTable.setColumnCount(col_count)
+        # 행의 이름 삽입
+        self.buylistTable.setHorizontalHeaderLabels(column_head)
 
     def set_signal_slot(self):
         self.kiwoom.ocx.OnEventConnect.connect(self.login_slot)  # 커넥트 결과를 login_slot 함수로 전달
@@ -86,18 +93,45 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         h2.start()
 
     def search_item(self):
-        item_name: str = self.searchItemEdit.toPlainText()
+        item_name: str = self.searchItemTextEdit.toPlainText()
+        new_code: str = ""
         if item_name != "":
             for code in self.kiwoom.All_Stock_Code.keys():
                 # 주식 정보 가져오기
                 if item_name == self.kiwoom.All_Stock_Code[code]['종목명']:
-                    self.new_code = code
+                    new_code = code
 
-        column_head = ["종목코드", "종목명", "현재가", "신용비율"]
-        col_count = len(column_head)
-        row_count = self.buy
+        self.get_item_info(new_code)
 
-    def res_tr_data(self):
+    # 주식기본정보요청 (opt10001)
+    def get_item_info(self, code):
+        self.kiwoom.ocx.dynamicCall("SetInputValue(QString, QString)", "종목코드", code)
+        result = self.kiwoom.ocx.dynamicCall("CommRqData(QString, QString, int, QString)", "주식기본정보요청", "opt10001", 0, "100")
+        print(result)
+
+
+    def res_tr_data(self, screen_no, rq_name, tr_code, record_name, prev_next):
+        # 주식기본정보요청
+        if tr_code == "opt10001":
+            if rq_name == "주식기본정보요청":
+                code = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", tr_code, rq_name, 0, "종목코드").strip()
+                if not code:
+                    print("존재하지 않는 종목입니다.")
+                    return
+
+                item_name = self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", tr_code, rq_name, 0,
+                                                   "종목명").strip()
+                current_price = abs(int(self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", tr_code, rq_name, 0, "현재가")))
+                # [      +3000] -> [+3000]  strip으로 공백 없애기
+                credit_ratio = (self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)", tr_code, rq_name, 0, "신용비율")).strip()
+                row_count = self.buylistTable.rowCount()
+
+                self.buylistTable.setRowCount(row_count + 1)
+                self.buylistTable.setItem(row_count, 0, QTableWidgetItem(code))
+                self.buylistTable.setItem(row_count, 1, QTableWidgetItem(item_name))
+                self.buylistTable.setItem(row_count, 2, QTableWidgetItem(str(current_price)))
+                self.buylistTable.setItem(row_count, 3, QTableWidgetItem(credit_ratio))
+
 
 
 

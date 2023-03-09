@@ -171,12 +171,7 @@
      <attribute name="title">
       <string>종목 선정</string>
      </attribute>
-    </widget>
-    <widget class="QWidget" name="tab_2">
-     <attribute name="title">
-      <string>매매 조건</string>
-     </attribute>
-     <widget class="QTableWidget" name="buylastTable">
+     <widget class="QTableWidget" name="buylistTable">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -186,6 +181,11 @@
        </rect>
       </property>
      </widget>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>매매 조건</string>
+     </attribute>
     </widget>
    </widget>
    <widget class="QPushButton" name="addItemBtn">
