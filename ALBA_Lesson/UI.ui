@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1602</width>
-    <height>1091</height>
+    <height>1118</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -158,10 +158,10 @@
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>310</x>
       <y>500</y>
-      <width>931</width>
-      <height>371</height>
+      <width>1271</width>
+      <height>381</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -176,8 +176,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>921</width>
-        <height>331</height>
+        <width>1261</width>
+        <height>341</height>
        </rect>
       </property>
      </widget>
@@ -188,53 +188,195 @@
      </attribute>
     </widget>
    </widget>
-   <widget class="QPushButton" name="addItemBtn">
+   <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>950</y>
-      <width>150</width>
-      <height>46</height>
+      <y>500</y>
+      <width>271</width>
+      <height>501</height>
      </rect>
     </property>
-    <property name="text">
-     <string>종목 추가</string>
+    <property name="title">
+     <string>매매조건</string>
     </property>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>141</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>종목명 입력</string>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="searchItemTextEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>70</y>
+       <width>251</width>
+       <height>41</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QDoubleSpinBox" name="lossSpinBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>390</y>
+       <width>251</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="showGroupSeparator" stdset="0">
+      <bool>true</bool>
+     </property>
+     <property name="maximum">
+      <double>100000000.000000000000000</double>
+     </property>
+    </widget>
+    <widget class="QDoubleSpinBox" name="buyNumSpinBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>230</y>
+       <width>251</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="showGroupSeparator" stdset="0">
+      <bool>true</bool>
+     </property>
+     <property name="maximum">
+      <double>100000000.000000000000000</double>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>200</y>
+       <width>141</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>매수 수량</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="addItemBtn">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>440</y>
+       <width>121</width>
+       <height>46</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>추가</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="removeItemBtn">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>440</y>
+       <width>111</width>
+       <height>46</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>삭제</string>
+     </property>
+    </widget>
+    <widget class="QDoubleSpinBox" name="profitSpinBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>310</y>
+       <width>251</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="showGroupSeparator" stdset="0">
+      <bool>true</bool>
+     </property>
+     <property name="maximum">
+      <double>100000000.000000000000000</double>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>280</y>
+       <width>141</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>익절 가격</string>
+     </property>
+    </widget>
+    <widget class="QDoubleSpinBox" name="buyPriceSpinBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>150</y>
+       <width>251</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="showGroupSeparator" stdset="0">
+      <bool>true</bool>
+     </property>
+     <property name="maximum">
+      <double>100000000.000000000000000</double>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>360</y>
+       <width>141</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>손절 가격</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>120</y>
+       <width>141</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>매수 가격</string>
+     </property>
+    </widget>
    </widget>
-   <widget class="QPushButton" name="removeItemBtn">
+   <widget class="QPushButton" name="autoTradeBtn">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>950</y>
-      <width>150</width>
-      <height>46</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>종목 삭제</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>900</y>
-      <width>141</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>종목명 입력</string>
-    </property>
-   </widget>
-   <widget class="QTextEdit" name="searchItemTextEdit">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
+      <x>310</x>
       <y>890</y>
-      <width>251</width>
-      <height>41</height>
+      <width>1271</width>
+      <height>101</height>
      </rect>
+    </property>
+    <property name="text">
+     <string>자동매매 시작</string>
     </property>
    </widget>
   </widget>

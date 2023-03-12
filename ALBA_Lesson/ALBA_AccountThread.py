@@ -3,7 +3,7 @@ from ALBA_Kiwoom import Kiwoom
 from PyQt5.QtWidgets import *
 
 # opw00018 계좌평가잔고내역요청
-class Thread1(QThread):
+class AccountThread(QThread):
     def __init__(self, gui):
         super().__init__(gui)
         self.gui = gui
@@ -60,11 +60,11 @@ class Thread1(QThread):
             totalProfieLossRate = float(self.kiwoom.ocx.dynamicCall("GetCommData(QString, QString, int, QString)"
                                                                     , trCode, rqName, 0, "총수익률(%)"))
 
-            self.gui.accLabel6.setText(str(totalBuyingPrice))
-            self.gui.accLabel7.setText(str(currentTotalPrice))
-            self.gui.accLabel8.setText(str(balanceAsset))
-            self.gui.accLabel9.setText(str(totalEstimateProfit))
-            self.gui.accLabel10.setText(str(totalProfieLossRate))
+            self.gui.accLabel6.setText(str(format(totalBuyingPrice, ",")))
+            self.gui.accLabel7.setText(str(format(currentTotalPrice, ",")))
+            self.gui.accLabel8.setText(str(format(balanceAsset, ",")))
+            self.gui.accLabel9.setText(str(format(totalEstimateProfit, ",")))
+            self.gui.accLabel10.setText(str(format(totalProfieLossRate, ",")))
 
             # 멀티데이터 정보 넣기
             column_head = ["종목번호", "종목명", "보유수량", "매입가", "현재가", "평가손익", "수익률(%)"]
@@ -107,14 +107,20 @@ class Thread1(QThread):
                 self.kiwoom.accPortfolio[itemCode].update({"매매가능수량": possibleQuantity})
 
                 self.gui.stockListTable.setItem(index, 0, QTableWidgetItem(str(itemCode)))
-                self.gui.stockListTable.setItem(index, 1, QTableWidgetItem(str(itemName)))
+                self.gui.stockListTable.setItem(index, 1, QTableWidgetItem(str(itemName.strip())))
                 self.gui.stockListTable.setItem(index, 2, QTableWidgetItem(str(amount)))
-                self.gui.stockListTable.setItem(index, 3, QTableWidgetItem(str(buyingPrice)))
-                self.gui.stockListTable.setItem(index, 4, QTableWidgetItem(str(currentPrice)))
-                self.gui.stockListTable.setItem(index, 5, QTableWidgetItem(str(estimateProfit)))
+                self.gui.stockListTable.setItem(index, 3, QTableWidgetItem(str(format(buyingPrice, ","))))
+                self.gui.stockListTable.setItem(index, 4, QTableWidgetItem(str(format(currentPrice, ","))))
+                self.gui.stockListTable.setItem(index, 5, QTableWidgetItem(str(format(estimateProfit, ","))))
                 self.gui.stockListTable.setItem(index, 6, QTableWidgetItem(str(profitRate)))
+
+                # 우측, 수직 가운데 정렬
+                for i in range(0, 7):
+                    self.gui.stockListTable.item(index, i).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
 
             if prevNext == "2":
                 self.reqAccountDetail(prevNext="2")         # 다음 페이지가 있으면 전부 검색한다
             else:
                 self.eventLoop.exit()  # 끊어 준다.
+                self.gui.stockListTable.resizeRowsToContents()
+                self.gui.stockListTable.resizeColumnsToContents()

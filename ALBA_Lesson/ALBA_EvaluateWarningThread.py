@@ -6,7 +6,7 @@ from datetime import datetime, timedelta  # 특정 일자를 조회
 
 
 # opt10045 : 종목별기관매매추이요청
-class Thread2(QThread):
+class EvaluateWarningThread(QThread):
     def __init__(self, gui):
         super().__init__(gui)
         self.FluctuationRateData = None

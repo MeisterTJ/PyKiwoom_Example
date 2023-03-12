@@ -3,11 +3,13 @@ import sys  # system specific parameters and functions : 파이썬 스크립트 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *  # GUI의 그래픽적 요소를 제어       하단의 terminal 선택, activate py37_32,  pip install pyqt5,   전부다 y
 from PyQt5 import uic  # ui 파일을 가져오기위한 함수
+import qdarkstyle
 
 #### 부가 기능 수행(일꾼) ################
 from ALBA_Kiwoom import Kiwoom
-from ALBA_Thread1 import Thread1    # 계좌평가잔고내역 가져오기
-from ALBA_Thread2 import Thread2    # 계좌 관리
+from ALBA_AccountThread import AccountThread    # 계좌평가잔고내역 가져오기
+from ALBA_EvaluateWarningThread import EvaluateWarningThread    # 계좌 관리
+from ALBA_AutoTradeThread import AutoTradeThread        # 자동매매 쓰레드
 
 # =================== 프로그램 실행 프로그램 =========================#
 
@@ -17,8 +19,15 @@ form_class = uic.loadUiType("UI.ui")[0]  # 만들어 놓은 ui 불러오기
 class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에서 윈도우 생성시 필요한 함수
 
     searchItemTextEdit: QTextEdit
+    buyPriceSpinBox: QDoubleSpinBox
+    buyNumSpinBox: QDoubleSpinBox
+    profitSpinBox: QDoubleSpinBox
+    lossSpinBox: QDoubleSpinBox
     addItemBtn: QPushButton
+    removeItemBtn: QPushButton
     buylistTable: QTableWidget
+    autoTradeBtn: QPushButton
+    accComboBox: QComboBox
 
     def __init__(self, *args, **kwargs):  # Main class의 self를 초기화 한다.
         print("Login Machine 실행합니다.")
@@ -35,17 +44,34 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
 
     def setUI(self):
         self.setupUi(self)                       # UI 초기값 셋업
+        # 다크 테마 적용
+        self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
         self.accLabel1.setText(str("총매입금액"))
         self.accLabel2.setText(str("총평가금액"))
         self.accLabel3.setText(str("추정예탁자산"))
         self.accLabel4.setText(str("총평가손익금액"))
         self.accLabel5.setText(str("총수익률(%)"))
-        self.reqAccBtn.clicked.connect(self.runThread1)
-        self.accManageBtn.clicked.connect(self.runThread2)
+        self.reqAccBtn.clicked.connect(self.runAccountThread)
+        self.accManageBtn.clicked.connect(self.runEvaluateWarningThread)
+        self.autoTradeBtn.clicked.connect(self.runAutoTradeThread)
+
+        # 우측 정렬
+        self.searchItemTextEdit.setAlignment(Qt.AlignRight)
+        self.buyPriceSpinBox.setAlignment(Qt.AlignRight)
+        self.buyNumSpinBox.setAlignment(Qt.AlignRight)
+        self.profitSpinBox.setAlignment(Qt.AlignRight)
+        self.lossSpinBox.setAlignment(Qt.AlignRight)
+
+        # 스핀박스 소수점 제거
+        self.buyPriceSpinBox.setDecimals(0)
+        self.buyNumSpinBox.setDecimals(0)
+        self.profitSpinBox.setDecimals(0)
+        self.lossSpinBox.setDecimals(0)
 
         # 종목 선택하기 : 새로운 종목 추가 및 삭제
         self.addItemBtn.clicked.connect(self.search_item)
-        column_head = ["종목코드", "종목명", "현재가", "신용비율"]
+        self.removeItemBtn.clicked.connect(self.remove_item)
+        column_head = ["종목코드", "종목명", "현재가", "신용비율", "매수가", "매수수량", "익절가", "손절가"]
         col_count = len(column_head)
         # 행 갯수
         self.buylistTable.setColumnCount(col_count)
@@ -82,15 +108,21 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         for acc in account_list.split(';'):
             self.accComboBox.addItem(acc)
 
-    def runThread1(self):
+    def runAccountThread(self):
         print("선택 계좌 정보 가져오기")
-        h1 = Thread1(self)
+        h1 = AccountThread(self)
         h1.start()
 
-    def runThread2(self):
-        print("계좌 관리")
-        h2 = Thread2(self)
+    def runEvaluateWarningThread(self):
+        print("계좌 관리 쓰레드 시작!")
+        h2 = EvaluateWarningThread(self)
         h2.start()
+
+    def runAutoTradeThread(self):
+        print("자동 매매 쓰레드 시작!")
+        h3 = AutoTradeThread(self)
+        h3.start()
+
 
     def search_item(self):
         item_name: str = self.searchItemTextEdit.toPlainText()
@@ -103,12 +135,22 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
 
         self.get_item_info(new_code)
 
+    def remove_item(self):
+        index_list = []
+        selected_indexes = self.buylistTable.selectedIndexes()
+        for model_index in selected_indexes:
+            # QPersistentModelIndex는 QModelIndex와 달리
+            # 항목에 대한 참조가 모델에서 엑세스 할 수 있는한 계속 유효하도록 보장한다.
+            index = QPersistentModelIndex(model_index)
+            index_list.append(index)
+
+        for index in index_list:
+            self.buylistTable.removeRow(index.row())
+
     # 주식기본정보요청 (opt10001)
     def get_item_info(self, code):
         self.kiwoom.ocx.dynamicCall("SetInputValue(QString, QString)", "종목코드", code)
-        result = self.kiwoom.ocx.dynamicCall("CommRqData(QString, QString, int, QString)", "주식기본정보요청", "opt10001", 0, "100")
-        print(result)
-
+        self.kiwoom.ocx.dynamicCall("CommRqData(QString, QString, int, QString)", "주식기본정보요청", "opt10001", 0, "100")
 
     def res_tr_data(self, screen_no, rq_name, tr_code, record_name, prev_next):
         # 주식기본정보요청
@@ -131,6 +173,17 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
                 self.buylistTable.setItem(row_count, 1, QTableWidgetItem(item_name))
                 self.buylistTable.setItem(row_count, 2, QTableWidgetItem(str(current_price)))
                 self.buylistTable.setItem(row_count, 3, QTableWidgetItem(credit_ratio))
+                self.buylistTable.setItem(row_count, 4, QTableWidgetItem(str(int(self.buyPriceSpinBox.value()))))
+                self.buylistTable.setItem(row_count, 5, QTableWidgetItem(str(int(self.buyNumSpinBox.value()))))
+                self.buylistTable.setItem(row_count, 6, QTableWidgetItem(str(int(self.profitSpinBox.value()))))
+                self.buylistTable.setItem(row_count, 7, QTableWidgetItem(str(int(self.lossSpinBox.value()))))
+
+                # 우측, 수직 가운데 정렬
+                for i in range(0, 8):
+                    self.buylistTable.item(row_count, i).setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+
+                self.buylistTable.resizeRowsToContents()
+                self.buylistTable.resizeColumnsToContents()
 
 
 
