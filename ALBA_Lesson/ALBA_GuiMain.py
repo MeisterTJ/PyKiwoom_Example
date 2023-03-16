@@ -1,4 +1,5 @@
 import sys  # system specific parameters and functions : 파이썬 스크립트 관리
+import os   # 파일 저장용
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *  # GUI의 그래픽적 요소를 제어       하단의 terminal 선택, activate py37_32,  pip install pyqt5,   전부다 y
@@ -28,6 +29,9 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
     buylistTable: QTableWidget
     autoTradeBtn: QPushButton
     accComboBox: QComboBox
+    saveItemsBtn: QPushButton
+    loadItemsBtn: QPushButton
+    deleteFileBtn: QPushButton
 
     def __init__(self, *args, **kwargs):  # Main class의 self를 초기화 한다.
         print("Login Machine 실행합니다.")
@@ -54,6 +58,11 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         self.reqAccBtn.clicked.connect(self.runAccountThread)
         self.accManageBtn.clicked.connect(self.runEvaluateWarningThread)
         self.autoTradeBtn.clicked.connect(self.runAutoTradeThread)
+
+        # TEXT 저장, 로드, 삭제
+        self.saveItemsBtn.clicked.connect(self.save_items_to_txt)
+        self.loadItemsBtn.clicked.connect(self.load_items_from_txt)
+        self.deleteFileBtn.clicked.connect(self.delete_txtfile)
 
         # 우측 정렬
         self.searchItemTextEdit.setAlignment(Qt.AlignRight)
@@ -123,6 +132,58 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         h3 = AutoTradeThread(self)
         h3.start()
 
+    def save_items_to_txt(self):
+        codeset = set()  # 중복 방지
+        f = open("TradeItems.txt", "a", encoding="utf8")  # "a" = append
+        for row in range(self.buylistTable.rowCount()):
+            code = self.buylistTable.item(row, 0).text()
+            if codeset.__contains__(code) or code == "":
+                continue
+            else:
+                codeset.add(code)
+            name = self.buylistTable.item(row, 1).text().strip()
+            price = self.buylistTable.item(row, 2).text()
+            credit_ratio = self.buylistTable.item(row, 3).text()
+            buy_price = self.buylistTable.item(row, 4).text()
+            buy_num = self.buylistTable.item(row, 5).text()
+            profit_price = self.buylistTable.item(row, 6).text()
+            loss_price = self.buylistTable.item(row, 7).text()
+            f.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (code, name, price, credit_ratio, buy_price, buy_num, profit_price, loss_price))
+        f.close()
+
+    def load_items_from_txt(self):
+        if not os.path.exists("TradeItems.txt"):
+            return
+
+        f = open("TradeItems.txt", "r", encoding="utf8")
+        load_items = []
+        lines = f.readlines()
+        for line in lines:
+            if line != "":  # 만약에 line이 비어 있지 않으면 탭으로 구분
+                splits = line.split("\t")
+                code = splits[0]
+                name = splits[1]
+                price = splits[2]
+                credit_ratio = splits[3]
+                buy_price = splits[4]
+                buy_num = splits[5]
+                profit_price = splits[6]
+                loss_price = splits[7]
+                load_items.append([code, name, price, credit_ratio, buy_price, buy_num, profit_price, loss_price])
+
+        f.close()
+
+        row_count = len(load_items)
+        self.buylistTable.setRowCount(row_count)
+        self.buylistTable.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        for index in range(row_count):
+            for col in range(0, 8):
+                self.buylistTable.setItem(index, col, QTableWidgetItem(str(load_items[index][col])))
+
+    def delete_txtfile(self):
+        if os.path.exists("TradeItems.txt"):
+            os.remove("TradeItems.txt")
 
     def search_item(self):
         item_name: str = self.searchItemTextEdit.toPlainText()

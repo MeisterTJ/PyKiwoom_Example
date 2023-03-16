@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1602</width>
-    <height>1118</height>
+    <height>1141</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -370,13 +370,52 @@
     <property name="geometry">
      <rect>
       <x>310</x>
-      <y>890</y>
+      <y>950</y>
       <width>1271</width>
       <height>101</height>
      </rect>
     </property>
     <property name="text">
      <string>자동매매 시작</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="saveItemsBtn">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>890</y>
+      <width>150</width>
+      <height>46</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>종목 저장</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="loadItemsBtn">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>890</y>
+      <width>150</width>
+      <height>46</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>불러오기</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="deleteFileBtn">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>890</y>
+      <width>150</width>
+      <height>46</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>파일 삭제</string>
     </property>
    </widget>
   </widget>

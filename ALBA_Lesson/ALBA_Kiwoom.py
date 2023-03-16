@@ -13,4 +13,4 @@ class Kiwoom(QWidget, metaclass=Singleton):     # QMainWindow : PyQt5에서 윈�
         # 전체 공유 데이터
         self.All_Stock_Code = {}    # 코스피, 코스닥 전체 코드 리스트
         self.accPortfolio = {}  # 계좌에 들어있는 종목의 코드, 수익률 등등 입력
-
+        self.autoTradeData = {}
