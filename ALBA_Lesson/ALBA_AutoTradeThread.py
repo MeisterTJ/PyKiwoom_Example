@@ -26,7 +26,10 @@ class AutoTradeThread(QThread):
         self.kiwoom.ocx.dynamicCall("SetRealRemove(QString, QString)", ["ALL", "ALL"])
 
         # 실시간 데이터 받기
-        self.kiwoom.ocx.OnReceiveRealData.connect(self.res_realdata)
+        self.kiwoom.ocx.OnReceiveRealData.connect(self.receive_realdata)
+
+        # 체결 결과 받기
+        self.kiwoom.ocx.OnReceiveChejanData.connect(self.receive_chejandata)
 
         # 선정된 종목 실시간 요청으로 등록하기
         screen_no = 5000
@@ -73,7 +76,7 @@ class AutoTradeThread(QThread):
         f.close()
 
     # 실시간으로 서버에서 데이터를 준다.
-    def res_realdata(self, code, realtype, realdata):
+    def receive_realdata(self, code, realtype, realdata):
         if realtype == "장시작시간":
             fid = self.realType.REALTYPE[realtype]['장운영구분']
 
@@ -232,3 +235,23 @@ class AutoTradeThread(QThread):
                         print("손절가로 주문 전달 성공")
                     else:
                         print("손절가로 주문 전달 실패")
+
+    # 체결 정보를 받는다.
+    # 주문 접수, 체결통보, 잔고통보를 수신한다.
+    def receive_chejandata(self, gubun, item_count, fid_list):
+        # (주문접수, 체결통보) = 0, (잔고변경) = 1
+        if gubun == "0":
+            print("매수/매도 진행 중, 미체결 잔고 업데이트")
+        else:
+            print("미체결 잔고 해결로 실제 잔고 업데이트")
+
+        print("Fid List : %s" % (str(fid_list)))
+
+        # 주문전송 후 미체결 되었을 때
+        if int(gubun) == 0:
+            account_id = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['계좌번호'])
+            # [A203042] 이런식으로 오기 때문에 앞의 알파벳을 잘라줘야 한다.
+            code = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['종목코드'])
+            item_name = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['종목명'])
+            item_name = item_name.strip()   # 혹시라도 공백이 있을 까봐
+
