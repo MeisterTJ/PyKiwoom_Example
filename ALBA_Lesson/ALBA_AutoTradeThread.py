@@ -11,6 +11,7 @@ class AutoTradeThread(QThread):
         super().__init__(gui)
         self.gui = gui
         self.kiwoom = Kiwoom()  # 멤버로 Kiwoom 클래스 생성
+
         self.account_id = self.gui.accComboBox.currentText()
 
         # txt로부터 아이템들 읽어와서 딕셔너리에 등록
@@ -287,3 +288,37 @@ class AutoTradeThread(QThread):
             current_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['현재가'])))
             first_sell_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['(최우선)매도호가'])))
             first_buy_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['(최우선)매수호가'])))
+
+            if order_no not in self.kiwoom.chegual_data.keys():
+                self.kiwoom.chegual_data.update({order_no: {}})
+
+            self.kiwoom.chegual_data[order_no].update({"종목코드": code})
+            self.kiwoom.chegual_data[order_no].update({"종목명": item_name})
+            self.kiwoom.chegual_data[order_no].update({"주문번호": order_no})
+            self.kiwoom.chegual_data[order_no].update({"주문상태": order_status})
+            self.kiwoom.chegual_data[order_no].update({"주문수량": order_num})
+            self.kiwoom.chegual_data[order_no].update({"주문가격": order_price})
+            self.kiwoom.chegual_data[order_no].update({"주문구분": order_gubun})
+            self.kiwoom.chegual_data[order_no].update({"미체결수량": not_chegual_num})
+            self.kiwoom.chegual_data[order_no].update({"체결량": chegual_num})
+            self.kiwoom.chegual_data[order_no].update({"원주문번호": origin_order_no})
+            self.kiwoom.chegual_data[order_no].update({"주문/체결시간": chegual_time})
+            self.kiwoom.chegual_data[order_no].update({"체결가": chegual_price})
+            self.kiwoom.chegual_data[order_no].update({"현재가": current_price})
+            self.kiwoom.chegual_data[order_no].update({"(최우선)매도호가": first_sell_price})
+            self.kiwoom.chegual_data[order_no].update({"(최우선)매수호가": first_buy_price})
+
+            row_count = len(self.kiwoom.chegual_data)
+            self.gui.chegualTable: QTableWidget
+            self.gui.chegualTable.setRowCount(row_count)
+
+            for index in range(row_count):
+                self.gui.chegualTable.setItem(index, 0, QTableWidgetItem(str(code)))
+                self.gui.chegualTable.setItem(index, 1, QTableWidgetItem(str(item_name)))
+                self.gui.chegualTable.setItem(index, 2, QTableWidgetItem(str(format(order_no))))
+                self.gui.chegualTable.setItem(index, 3, QTableWidgetItem(str(format(order_status))))
+                self.gui.chegualTable.setItem(index, 4, QTableWidgetItem(str(format(order_num, ","))))
+                self.gui.chegualTable.setItem(index, 5, QTableWidgetItem(str(format(order_price, ","))))
+                self.gui.chegualTable.setItem(index, 6, QTableWidgetItem(str(format(not_chegual_num, ","))))
+                
+            print("미체결잔고 종목 추가: %s, 수량: %s" % (self.kiwoom.chegual_data[order_no]['종목명'], self.kiwoom.chegual_data[order_no]['미체결수량']))

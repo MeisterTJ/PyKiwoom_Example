@@ -32,6 +32,7 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
     saveItemsBtn: QPushButton
     loadItemsBtn: QPushButton
     deleteFileBtn: QPushButton
+    chejanTable: QTableWidget
 
     def __init__(self, *args, **kwargs):  # Main class의 self를 초기화 한다.
         print("Login Machine 실행합니다.")
@@ -86,6 +87,11 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         self.buylistTable.setColumnCount(col_count)
         # 행의 이름 삽입
         self.buylistTable.setHorizontalHeaderLabels(column_head)
+
+        column_head = ["종목코드", "종목명", "주문번호", "주문상태", "주문수량", "주문가격", "미체결수량"]
+        col_count = len(column_head)
+        self.chejanTable.setColumnCount(col_count)
+        self.chejanTable.setHorizontalHeaderLabels(column_head)
 
     def set_signal_slot(self):
         self.kiwoom.ocx.OnEventConnect.connect(self.login_slot)  # 커넥트 결과를 login_slot 함수로 전달
