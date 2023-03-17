@@ -252,6 +252,38 @@ class AutoTradeThread(QThread):
             account_id = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['계좌번호'])
             # [A203042] 이런식으로 오기 때문에 앞의 알파벳을 잘라줘야 한다.
             code = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['종목코드'])
-            item_name = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['종목명'])
-            item_name = item_name.strip()   # 혹시라도 공백이 있을 까봐
+            item_name = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['종목명']).strip()
 
+            # 원주문번호가 없으면 0000000이다.
+            origin_order_no = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['원주문번호'])
+
+            order_no = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문번호'])
+            
+            # 접수/확인/체결 정보
+            order_status = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문상태'])
+            order_num = int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문수량']))
+            order_price = int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문가격']))
+            not_chegual_num = int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['미체결수량']))
+            order_gubun: str = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문구분'])
+
+            # 부호가 나오기 때문에 잡아주어야 한다.
+            order_gubun = order_gubun.lstrip('+').lstrip('-').strip()
+            chegual_time: str = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문/체결시간'])
+            chegual_price = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['체결가'])
+
+            if chegual_price == '':
+                chegual_price = 0
+            else:
+                chegual_price = int(chegual_price)
+
+            chegual_num = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['체결량'])
+
+            if chegual_num == '':
+                chegual_num = 0
+            else:
+                chegual_num = int(chegual_num)
+
+
+            current_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['현재가'])))
+            first_sell_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['(최우선)매도호가'])))
+            first_buy_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['(최우선)매수호가'])))
