@@ -15,4 +15,5 @@ class Kiwoom(QWidget, metaclass=Singleton):     # QMainWindow : PyQt5에서 윈�
         self.accPortfolio = {}  # 계좌에 들어있는 종목의 코드, 수익률 등등 입력
         self.autoTradeData = {}
 
-        self.chegual_data = {}  # 체결, 미체결 정보
+        self.not_chegual_data = {}  # 미체결 정보
+        self.jango_data = {}  # 잔고 데이터 정보

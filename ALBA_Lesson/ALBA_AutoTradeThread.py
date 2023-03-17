@@ -32,6 +32,10 @@ class AutoTradeThread(QThread):
         # 체결 결과 받기
         self.kiwoom.ocx.OnReceiveChejanData.connect(self.receive_chejandata)
 
+        # 주문 취소한 종목
+        self.cancel_buy_order = []
+        self.cancel_sell_order = []
+
         # 선정된 종목 실시간 요청으로 등록하기
         screen_no = 5000
 
@@ -237,6 +241,108 @@ class AutoTradeThread(QThread):
                     else:
                         print("손절가로 주문 전달 실패")
 
+            # 3. 미체결 잔고 매수/매도 취소
+            not_buy_list = list(self.kiwoom.not_chegual_data)
+
+            for order_no in not_buy_list:
+                code = self.kiwoom.not_chegual_data[order_no]['종목코드']
+                order_price = self.kiwoom.not_chegual_data[order_no]['주문가격']
+                not_chegual_num = self.kiwoom.not_chegual_data[order_no]['미체결수량']
+                order_gubun = self.kiwoom.not_chegual_data[order_no]['주문구분']
+                
+                # 매수에 대한 취소 주문 : 매수주문가격이 현재가보다 작을 경우
+                if order_gubun == '매수' and not_chegual_num > 0 and order_price < self.kiwoom.autoTradeData[code]["현재가"]:
+                    order_success = self.kiwoom.ocx.dynamicCall("SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)"
+                                                                , ["매수취소"
+                                                                    , self.kiwoom.autoTradeData[code]['주문용스크린번호']
+                                                                    , self.account_id
+                                                                   , 3
+                                                                   , code
+                                                                   , 0
+                                                                   , 0
+                                                                   , self.realType.SENDTYPE['거래구분']['지정가']
+                                                                   , order_no])
+                    
+                    if order_success == 0:
+                        # 체결 잔고에서 del을 했기 때문에 여기서 하지 않는다.
+                        print("%s : %s 매수취소 전달 성공" % (code, self.kiwoom.autoTradeData[code]['종목명']))
+
+                        # 차후 재매수를 위해 필요하다.
+                        self.cancel_buy_order.append(code)
+                    else:
+                        print("%s : %s 매수취소 전달 실패" % (code, self.kiwoom.autoTradeData[code]['종목명']))
+
+                    f = open("CancelOrderLog.txt", "a", encoding="utf8")
+                    f.write("%s\t%s\t%s\t%s\n" % ('매수취소', self.kiwoom.autoTradeData[code]['종목명'], not_chegual_num, self.kiwoom.autoTradeData[code]['체결시간']))
+                    f.close()
+
+                # 미체결 수량이 없을 경우 미체결리스트에서 삭제한다.
+                elif not_chegual_num == 0:
+                    del self.kiwoom.not_chegual_data[order_no]
+
+                # 매도에 대한 취소 주문 : 매도주문가격이 현재가보다 클 경우
+                if order_gubun == '매도' and not_chegual_num > 0 and order_price > self.kiwoom.autoTradeData[code]["현재가"]:
+                    order_success = self.kiwoom.ocx.dynamicCall(
+                        "SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)"
+                        , ["매도취소"
+                            , self.kiwoom.autoTradeData[code]['주문용스크린번호']
+                            , self.account_id
+                            , 4
+                            , code
+                            , 0
+                            , 0
+                            , self.realType.SENDTYPE['거래구분']['지정가']
+                            , order_no])
+
+                    if order_success == 0:
+                        # 체결 잔고에서 del을 했기 때문에 여기서 하지 않는다.
+                        print("%s : %s 매도취소 전달 성공" % (code, self.kiwoom.autoTradeData[code]['종목명']))
+
+                        # 차후 재매도를 위해 필요하다.
+                        self.cancel_sell_order.append(code)
+                    else:
+                        print("%s : %s 매도취소 전달 실패" % (code, self.kiwoom.autoTradeData[code]['종목명']))
+
+                    f = open("CancelOrderLog.txt", "a", encoding="utf8")
+                    f.write("%s\t%s\t%s\t%s\n" % ('매도취소', self.kiwoom.autoTradeData[code]['종목명'], not_chegual_num,
+                                                  self.kiwoom.autoTradeData[code]['체결시간']))
+                    f.close()
+
+                # 미체결 수량이 없을 경우 미체결리스트에서 삭제한다.
+                elif not_chegual_num == 0:
+                    del self.kiwoom.not_chegual_data[order_no]
+
+            # 4. 재매수 알고리즘 : 현재가가 매수 되지 못하였을 경우를 대비하여 재매수 알고리즘 가동
+            if code in self.cancel_buy_order:
+                if self.kiwoom.autoTradeData[code]['현재가'] <= self.kiwoom.autoTradeData[code]['매수가']:
+                    print("재매수 시작 %s : %s" % (code, self.kiwoom.autoTradeData[code]['종목명']))
+
+                    order_success = self.kiwoom.ocx.dynamicCall("SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)"
+                                                           , "신규매수"
+                                                           , self.kiwoom.autoTradeData[code]['주문용스크린번호']
+                                                           , self.account_id
+                                                           , 1
+                                                           , code
+                                                           , self.kiwoom.autoTradeData[code]['매수수량']
+                                                           , self.kiwoom.autoTradeData[code]['현재가']
+                                                           , self.realType.SENDTYPE['거래구분']['지정가']
+                                                           , "")
+                    
+                    f = open("TradeLog.txt", "a", encoding="utf8")
+                    f.write("%s\t%s\t%s\t%s\n" % ("재매수정보", self.kiwoom.autoTradeData[code]['종목명'], data2, self.kiwoom.autoTradeData[code]['체결시간']))
+                    f.close()
+
+                    if order_success == 0:
+                        print("재매수 주문 전달 성공 %s : %s" % (code, self.kiwoom.autoTradeData[code]['종목명']))
+                    else:
+                        print("재매수 주문 전달 실패 %s : %s" % (code, self.kiwoom.autoTradeData[code]['종목명']))
+
+                    self.cancel_buy_order.remove(code)
+                    # del self.cancel_buy_order[self.cancel_buy_order.index(code)]
+
+
+            # 5. 재매도 알고리즘 :
+
     # 체결 정보를 받는다.
     # 주문 접수, 체결통보, 잔고통보를 수신한다.
     def receive_chejandata(self, gubun, item_count, fid_list):
@@ -289,26 +395,26 @@ class AutoTradeThread(QThread):
             first_sell_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['(최우선)매도호가'])))
             first_buy_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['(최우선)매수호가'])))
 
-            if order_no not in self.kiwoom.chegual_data.keys():
-                self.kiwoom.chegual_data.update({order_no: {}})
+            if order_no not in self.kiwoom.not_chegual_data.keys():
+                self.kiwoom.not_chegual_data.update({order_no: {}})
 
-            self.kiwoom.chegual_data[order_no].update({"종목코드": code})
-            self.kiwoom.chegual_data[order_no].update({"종목명": item_name})
-            self.kiwoom.chegual_data[order_no].update({"주문번호": order_no})
-            self.kiwoom.chegual_data[order_no].update({"주문상태": order_status})
-            self.kiwoom.chegual_data[order_no].update({"주문수량": order_num})
-            self.kiwoom.chegual_data[order_no].update({"주문가격": order_price})
-            self.kiwoom.chegual_data[order_no].update({"주문구분": order_gubun})
-            self.kiwoom.chegual_data[order_no].update({"미체결수량": not_chegual_num})
-            self.kiwoom.chegual_data[order_no].update({"체결량": chegual_num})
-            self.kiwoom.chegual_data[order_no].update({"원주문번호": origin_order_no})
-            self.kiwoom.chegual_data[order_no].update({"주문/체결시간": chegual_time})
-            self.kiwoom.chegual_data[order_no].update({"체결가": chegual_price})
-            self.kiwoom.chegual_data[order_no].update({"현재가": current_price})
-            self.kiwoom.chegual_data[order_no].update({"(최우선)매도호가": first_sell_price})
-            self.kiwoom.chegual_data[order_no].update({"(최우선)매수호가": first_buy_price})
+            self.kiwoom.not_chegual_data[order_no].update({"종목코드": code})
+            self.kiwoom.not_chegual_data[order_no].update({"종목명": item_name})
+            self.kiwoom.not_chegual_data[order_no].update({"주문번호": order_no})
+            self.kiwoom.not_chegual_data[order_no].update({"주문상태": order_status})
+            self.kiwoom.not_chegual_data[order_no].update({"주문수량": order_num})
+            self.kiwoom.not_chegual_data[order_no].update({"주문가격": order_price})
+            self.kiwoom.not_chegual_data[order_no].update({"주문구분": order_gubun})
+            self.kiwoom.not_chegual_data[order_no].update({"미체결수량": not_chegual_num})
+            self.kiwoom.not_chegual_data[order_no].update({"체결량": chegual_num})
+            self.kiwoom.not_chegual_data[order_no].update({"원주문번호": origin_order_no})
+            self.kiwoom.not_chegual_data[order_no].update({"주문/체결시간": chegual_time})
+            self.kiwoom.not_chegual_data[order_no].update({"체결가": chegual_price})
+            self.kiwoom.not_chegual_data[order_no].update({"현재가": current_price})
+            self.kiwoom.not_chegual_data[order_no].update({"(최우선)매도호가": first_sell_price})
+            self.kiwoom.not_chegual_data[order_no].update({"(최우선)매수호가": first_buy_price})
 
-            row_count = len(self.kiwoom.chegual_data)
+            row_count = len(self.kiwoom.not_chegual_data)
             self.gui.chegualTable: QTableWidget
             self.gui.chegualTable.setRowCount(row_count)
 
@@ -321,4 +427,38 @@ class AutoTradeThread(QThread):
                 self.gui.chegualTable.setItem(index, 5, QTableWidgetItem(str(format(order_price, ","))))
                 self.gui.chegualTable.setItem(index, 6, QTableWidgetItem(str(format(not_chegual_num, ","))))
                 
-            print("미체결잔고 종목 추가: %s, 수량: %s" % (self.kiwoom.chegual_data[order_no]['종목명'], self.kiwoom.chegual_data[order_no]['미체결수량']))
+            print("미체결잔고 종목 추가: %s, 수량: %s" % (self.kiwoom.not_chegual_data[order_no]['종목명'], self.kiwoom.not_chegual_data[order_no]['미체결수량']))
+
+        # 잔고 변경
+        elif int(gubun) == 1:
+            account_no = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['계좌번호'])
+            code = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['종목코드'])[1:] # [A203042]
+            item_name = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['종목명']).strip()
+            current_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['현재가'])))
+            item_num = int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['보유수량']))
+            can_order_num = int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['주문가능수량']))
+            buy_price = abs(int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['매입단가'])))
+            total_buy_price = int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['총매입가']))
+            order_gubun = self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['매도매수구분'])
+            order_gubun = self.realType.REALTYPE['매도수구분'][order_gubun]
+
+            first_sell_price = int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['(최우선)매도호가']))
+            first_buy_price = int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['(최우선)매수호가']))
+            deposit = int(self.kiwoom.ocx.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['예수금']))
+
+            if code not in self.kiwoom.jango_data.keys():
+                self.kiwoom.jango_data.update({code: {}})
+            self.kiwoom.jango_data[code].update({"현재가": current_price})
+            self.kiwoom.jango_data[code].update({"종목코드": code})
+            self.kiwoom.jango_data[code].update({"종목명": item_name})
+            self.kiwoom.jango_data[code].update({"보유수량": item_num})
+            self.kiwoom.jango_data[code].update({"주문가능수량": can_order_num})
+            self.kiwoom.jango_data[code].update({"매입단가": buy_price})
+            self.kiwoom.jango_data[code].update({"총매입가": total_buy_price})
+            self.kiwoom.jango_data[code].update({"매도매수구분": order_gubun})
+            self.kiwoom.jango_data[code].update({"(최우선)매도호가": first_sell_price})
+            self.kiwoom.jango_data[code].update({"(최우선)매수호가": first_buy_price})
+
+            # 더 이상 종목에 대한 보유수량이 없을 경우 계좌잔고에서 삭제한다.
+            if code in self.kiwoom.accPortfolio.keys() and item_num == 0:
+                del self.kiwoom.accPortfolio[code]
