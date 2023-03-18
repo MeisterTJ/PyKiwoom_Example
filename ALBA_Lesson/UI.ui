@@ -395,7 +395,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -416,7 +416,7 @@
      <attribute name="title">
       <string>미체결 잔고</string>
      </attribute>
-     <widget class="QTableWidget" name="chegualTable">
+     <widget class="QTableWidget" name="chejanTable">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -427,6 +427,19 @@
       </property>
      </widget>
     </widget>
+   </widget>
+   <widget class="QPushButton" name="openConditionWindowBtn">
+    <property name="geometry">
+     <rect>
+      <x>870</x>
+      <y>890</y>
+      <width>531</width>
+      <height>46</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>키움조건식 자동매매</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

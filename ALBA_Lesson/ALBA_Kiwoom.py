@@ -17,3 +17,5 @@ class Kiwoom(QWidget, metaclass=Singleton):     # QMainWindow : PyQt5에서 윈�
 
         self.not_chegual_data = {}  # 미체결 정보
         self.jango_data = {}  # 잔고 데이터 정보
+        self.kospi = 0.0
+        self.kosdaq = 0.0

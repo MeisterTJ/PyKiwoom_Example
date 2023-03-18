@@ -6,6 +6,9 @@ from PyQt5.QtWidgets import *  # GUI의 그래픽적 요소를 제어       하�
 from PyQt5 import uic  # ui 파일을 가져오기위한 함수
 import qdarkstyle
 
+# 조건검색식 창
+from ALBA_Condition import ConditionWindow
+
 #### 부가 기능 수행(일꾼) ################
 from ALBA_Kiwoom import Kiwoom
 from ALBA_AccountThread import AccountThread    # 계좌평가잔고내역 가져오기
@@ -33,6 +36,7 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
     loadItemsBtn: QPushButton
     deleteFileBtn: QPushButton
     chejanTable: QTableWidget
+    openConditionWindowBtn: QPushButton
 
     def __init__(self, *args, **kwargs):  # Main class의 self를 초기화 한다.
         print("Login Machine 실행합니다.")
@@ -46,6 +50,9 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         self.set_signal_slot()  # 키움로그인을 위한 명령어 전송시 받는 공간을 미리 생성한다.
         self.signal_login_commConnect()
         self.kiwoom.ocx.OnReceiveTrData.connect(self.res_tr_data)
+
+        # 추가 윈도우
+        self.condition_window = ConditionWindow()
 
     def setUI(self):
         self.setupUi(self)                       # UI 초기값 셋업
@@ -92,6 +99,9 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
         col_count = len(column_head)
         self.chejanTable.setColumnCount(col_count)
         self.chejanTable.setHorizontalHeaderLabels(column_head)
+
+        # 추가 윈도우 오픈
+        self.openConditionWindowBtn.clicked.connect(self.open_condition_window)
 
     def set_signal_slot(self):
         self.kiwoom.ocx.OnEventConnect.connect(self.login_slot)  # 커넥트 결과를 login_slot 함수로 전달
@@ -252,6 +262,8 @@ class Login_Machine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5에
                 self.buylistTable.resizeRowsToContents()
                 self.buylistTable.resizeColumnsToContents()
 
+    def open_condition_window(self):
+        self.condition_window.show()
 
 
 
