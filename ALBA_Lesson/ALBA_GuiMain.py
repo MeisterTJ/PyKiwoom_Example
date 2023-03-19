@@ -7,7 +7,7 @@ from PyQt5 import uic  # ui 파일을 가져오기위한 함수
 import qdarkstyle
 
 # 조건검색식 창
-from ALBA_Condition import ConditionWindow
+from ALBA_ConditionWindow import ConditionWindow
 
 #### 부가 기능 수행(일꾼) ################
 from ALBA_Kiwoom import Kiwoom
