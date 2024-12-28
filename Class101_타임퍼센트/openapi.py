@@ -108,15 +108,20 @@ class Openapi(QAxWidget):
         self.set_input_value("종목코드", code)
         self.set_input_value("기준일자", start)
         self.set_input_value("수정주가구분", 1)
+
+        # 0 : 최초 요청 (Next 데이터 없음).
+        # req에 대한 응답은 _receive_tr_data 함수에서 처리한다.
         self.comm_rq_data("opt10081_req", "opt10081", 0, "0101")
 
         # 이 밑에는 한번만 가져오는게 아니고 싹다 가져오는거다.
-
+        # 여전히 데이터가 남아있을 경우.
         while self.remained_data == True:
             # time.sleep(TR_REQ_TIME_INTERVAL)
             self.set_input_value("종목코드", code)
             self.set_input_value("기준일자", start)
             self.set_input_value("수정주가구분", 1)
+
+            # 이전 호출에 이어서 데이터를 가져오는 요청
             self.comm_rq_data("opt10081_req", "opt10081", 2, "0101")
 
         time.sleep(0.2)
@@ -127,8 +132,8 @@ class Openapi(QAxWidget):
         if self.ohlcv['date'] == '':
             return []
 
+        # Pandas DataFrame : OHLCV 데이터를 각 열(column)으로 구성.
         df = DataFrame(self.ohlcv, columns=['open', 'high', 'low', 'close', 'volume'], index=self.ohlcv['date'])
-
         return df
 
     # get_one_day_option_data : 특정 종목의 특정 일 open(시작가), high(최고가), low(최저가), close(종가), volume(거래량) 조회 함수
