@@ -82,6 +82,7 @@ print("\n*************************************ex7*******************************
 
 def save_to_db(data):
     # DB에 넣는 함수를 만들었다고 가정
+    # f-string (포맷팅 문자열) 활성화.
     print(f"{data}를 DB에 넣습니다...")
 
 
@@ -102,8 +103,6 @@ save_to_db(daily_stock_price[6])
 save_to_db(daily_stock_price[7])
 
 # 만약 1년 치를 가져왔다고 생각해보면 코드는 끔찍하게 길어질 것이다. 이럴 때 아래와 같이 for문을 사용하면 간편해진다.
-
-
 
 for item in daily_stock_price:
     save_to_db(item)

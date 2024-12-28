@@ -39,6 +39,7 @@ print("\n*************************************ex4*******************************
 # pandas라는 모듈의 DataFrame 클래스를 import
 from pandas import DataFrame
 
+# 열행
 company = {
     'code': ('005930', '066570', '017670'),
     'code_name': ('삼성전자', 'LG전자', 'SK텔레콤'),
@@ -55,7 +56,7 @@ print(f"len: {len(df_company)}")
 
 print("\n*************************************ex5*************************************")
 '''
-iloc : 행, 열 단위로 DataFrame 안에 있는 데이터에 접근
+iloc : 행, 열 단위로 DataFrame 안에 있는 데이터에 접근, index 기반
 '''
 # 아래는 0행 0열과 0행 1열을 출력
 print(f"df_company.iloc[0, 0] :{df_company.iloc[0, 0]}, df_company.iloc[0, 1] : {df_company.iloc[0, 1]}")
@@ -64,7 +65,8 @@ print(f"df_company.iloc[0, 0] :{df_company.iloc[0, 0]}, df_company.iloc[0, 1] : 
 
 print("\n*************************************ex6*************************************")
 '''
-loc:  iloc와 동일하게 DataFrame에 행, 열로 접근하는데 열의 경우 라벨명으로 접근.
+loc:  iloc와 동일하게 DataFrame에 행, 열로 접근하는데 열의 경우 라벨명으로 접근. 
+레이블 기반 접근, 조건식을 사용하여 데이터를 필터링할 수 있다. 
 '''
 # 아래는 0행 'code_name' 열과 0행 'code'열을 출력
 

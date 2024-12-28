@@ -12,10 +12,14 @@ class StockItem():
     # 코스피 종목 리스트를 가져오는 메서드
     def get_item_kospi(self):
         print("get_item_kospi!!")
-        self.code_df_kospi = \
-        pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13&marketType=stockMkt',
-                     header=0)[
-            0]  # 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
+
+        self.code_df_kospi: pd.DataFrame
+        self.code_df_kosdaq: pd.DataFrame
+        # \ 백슬래쉬는 라인 계속의 의미를 담고 있다.
+        self.code_df_kospi = pd.read_html(
+            'http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13&marketType=stockMkt',
+            header=0
+        )[0]  # 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
 
         # 6자리 만들고 앞에 0을 붙인다.
         self.code_df_kospi.종목코드 = self.code_df_kospi.종목코드.map('{:06d}'.format)
@@ -30,8 +34,12 @@ class StockItem():
     # 코스닥 종목 리스트를 가져오는 메서드
     def get_item_kosdaq(self):
         print("get_item_kosdaq!!")
+        
+        # 대한민국 대표 기업 공시 채널
+        # https://comdoc.tistory.com/entry/%EC%83%81%EC%9E%A5-%EB%B2%95%EC%9D%B8-%EB%AA%A9%EB%A1%9D-KIND
+        # 이 사이트에서 Kind에서 데이터를 크롤링 하는 방법이 나와있다.
         self.code_df_kosdaq = \
-        pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13&marketType=kosdaqMkt',
+            pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13&marketType=kosdaqMkt',
                      header=0)[
             0]  # 종목코드가 6자리이기 때문에 6자리를 맞춰주기 위해 설정해줌
 
