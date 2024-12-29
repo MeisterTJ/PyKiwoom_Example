@@ -1,4 +1,5 @@
 # version 1.3.2
+# 하루에 한 번 실행되어 전체 종목들을 업데이트 해주는 프로그램.
 print("collector 프로그램이 시작 되었습니다!")
 
 from library.collector_api import *

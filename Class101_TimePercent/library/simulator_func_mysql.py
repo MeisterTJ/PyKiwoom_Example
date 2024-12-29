@@ -11,8 +11,8 @@ from sqlalchemy import event
 
 import pymysql.cursors
 
-from library.logging_pack import *
-from library import cf
+from .logging_pack import *
+from . import cf
 from pandas import DataFrame
 import re
 import datetime

@@ -3,8 +3,8 @@ print(f"daily_buy_list Version: {ver}")
 
 from sqlalchemy import event, String
 
-from library.daily_crawler import *
-from library import cf
+from .daily_crawler import *
+from . import cf
 from pandas import DataFrame
 from .open_api import escape_percentage
 
@@ -132,7 +132,6 @@ class daily_buy_list():
             return False
 
     def run(self):
-
         self.transaction_info()
 
         # print("run end")

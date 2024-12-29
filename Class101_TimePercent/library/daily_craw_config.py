@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 import pandas as pd
 
 pymysql.install_as_MySQLdb()
-from library import cf
+from . import cf
 from PyQt5.QtCore import *
 
 

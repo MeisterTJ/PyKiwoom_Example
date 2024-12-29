@@ -3,18 +3,22 @@ from functools import partial
 ver = "#version 1.3.15"
 print(f"open_api Version: {ver}")
 
-from library.simulator_func_mysql import *
+from .simulator_func_mysql import *
 import datetime
 import sys
 from PyQt5.QAxContainer import *
 from PyQt5.QtCore import *
 import time
-from library import cf
+from . import cf
 from collections import defaultdict
 
 import warnings
+# 프로그램 실행 중 발생할 수 있는 UserWarning 경고를 무시하여, 사용자에게 표시되지 않도록 한다.
 warnings.simplefilter(action='ignore', category=UserWarning)
+
 from pandas import DataFrame
+
+# 정규 표현식 (regular expression) 라이브러리
 import re
 import pandas as pd
 import os
@@ -180,6 +184,7 @@ class open_api(QAxWidget):
         elif self.account_number == cf.imi1_accout:  # 모의1
             logger.debug("모의투자 1!!")
             self.simul_num = cf.imi1_simul_num
+            # JackBot1
             self.db_name_setting(cf.imi1_db_name)
             self.mod_gubun = 1
 
@@ -212,6 +217,7 @@ class open_api(QAxWidget):
     def db_name_setting(self, db_name):
         self.db_name = db_name
         logger.debug("db name !!! : %s", self.db_name)
+        # 연결 후 연결 객체 반환
         conn = pymysql.connect(
             host=cf.db_ip,
             port=int(cf.db_port),
@@ -220,7 +226,10 @@ class open_api(QAxWidget):
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
+        # 데이터베이스 커서를 생성하고, with 문으로 안전하게 사용한다.
+        # with 문을 사용하면 커서 작업이 끝난 후 자동으로 커서를 닫아준다.
         with conn.cursor() as cursor:
+            # database가 존재하지 않는다면 해당 데이터베이스를 만들어준다.
             if not self.is_database_exist(cursor):
                 self.create_database(cursor)
             self.engine_JB = create_engine(
@@ -330,6 +339,8 @@ class open_api(QAxWidget):
         self.call_time = datetime.datetime.now()
 
         if ret == 0:
+            # QEventLoop는 Qt애플리케이션에서 이벤트 (타이머, 버튼 클릭, 네트워크 응답) 을 처리하는 중앙 컨트롤러이다.
+            # 이벤트 루프가 실행(exec_()) 중일 때만, 타이머의 타임아웃 이벤트를 포함하여 모든 이벤트가 처리된다.
             self.tr_event_loop = QEventLoop()
             self.tr_loop_count += 1
             # 영상 촬영 후 추가 된 코드입니다 (서버 응답이 늦을 시 예외 발생)
@@ -346,6 +357,7 @@ class open_api(QAxWidget):
         ret = self.dynamicCall("GetCommData(QString, QString, int, QString)", code, field_name, index, item_name)
         return ret.strip()
 
+    # 데이터를 전부 얻어오기까지 몇번을 반복해야 하는지를 반환한다.
     def _get_repeat_cnt(self, trcode, rqname):
         try:
             ret = self.dynamicCall("GetRepeatCnt(QString, QString)", trcode, rqname)
@@ -768,7 +780,6 @@ class open_api(QAxWidget):
 
         df = DataFrame(self.ohlcv, columns=['open', 'high', 'low', 'close', 'volume'], index=self.ohlcv['date'])
 
-
         # 데이터 프레임이 비어있으면 False를 반환한다.
         if df.empty:
             return False
@@ -1135,7 +1146,7 @@ class open_api(QAxWidget):
 
         self.rq_count += 1
         # openapi 조회 count 출력
-        logger.debug(self.rq_count)
+        logger.debug("api 호출 제한 %d/%d", self.rq_count, cf.max_api_call)
         if self.rq_count == cf.max_api_call:
             sys.exit(1)
 

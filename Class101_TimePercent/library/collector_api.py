@@ -7,11 +7,11 @@ print(f"collector_api Version: {ver}")
 
 import numpy
 import pathlib
-from library.open_api import *
+from .open_api import *
 import os
 import time
 from PyQt5.QtWidgets import *
-from library.daily_buy_list import *
+from .daily_buy_list import *
 from pandas import DataFrame
 # from kind_crawling import *
 
@@ -23,6 +23,7 @@ MARKET_KOSDAQ = 10
 class collector_api():
     def __init__(self):
         self.open_api = open_api()
+        # JackBot 데이터베이스
         self.engine_JB = self.open_api.engine_JB
         self.variable_setting()
         # self.kind = KINDCrawler()
@@ -34,15 +35,19 @@ class collector_api():
         self.dbl = daily_buy_list()
 
     # 콜렉팅을 실행하는 함수
+    # 매일 돌면서 리스트들을 한 번씩 업데이트해준다.
     def code_update_check(self):
         logger.debug("code_update_check 함수에 들어왔습니다.")
+        # JackBot의 setting_data 테이블로부터 세팅 정보들을 가져온다.
         sql = "select code_update,jango_data_db_check, possessed_item, today_profit, final_chegyul_check, db_to_buy_list,today_buy_list, daily_crawler , min_crawler, daily_buy_list from setting_data limit 1"
 
+        # sql 쿼리문 실행
         rows = self.engine_JB.execute(sql).fetchall()
 
         # stock_item_all(kospi,kosdaq,konex)
         # kospi(stock_kospi), kosdaq(stock_kosdaq), konex(stock_konex)
         # 관리종목(stock_managing), 불성실법인종목(stock_insincerity) 업데이트
+        # 코드 업데이트 날짜가 오늘이 아니라면 코드 실행
         if rows[0][0] != self.open_api.today:
             self.get_code_list()  # 촬영 후 일부 업데이트 되었습니다.
 
@@ -177,6 +182,7 @@ class collector_api():
         # 데이타 Fetch
         # rows 는 list안에 튜플이 있는 [()] 형태로 받아온다
 
+        # 받아와야되는 모든 종목의 코드 정보
         target_code = self.open_api.engine_daily_buy_list.execute(sql).fetchall()
         num = len(target_code)
         # mark = ".KS"
@@ -191,10 +197,13 @@ class collector_api():
             code = target_code[i][0]
             code_name = target_code[i][1]
 
+            # 현재 콜렉팅한 종목, 현재 콜렉팅 완료 수 / 전체 콜렉팅 필요 수
             logger.debug("++++++++++++++" + str(code_name) + "++++++++++++++++++++" + str(i + 1) + '/' + str(num))
 
+            # 콜렉팅 실행
             check_item_gubun = self.set_daily_crawler_table(code, code_name)
 
+            # 콜렉팅 후 콜렉팅 상태를 업데이트 한다.
             self.open_api.engine_daily_buy_list.execute(sql % (check_item_gubun, code))
 
     def min_crawler_check(self):
@@ -370,6 +379,7 @@ class collector_api():
         ).drop_duplicates(subset=['code', 'code_name'])
         self._stock_to_sql(stock_item_all_df, "item_all")
 
+        # 완료 후 code_update 열 오늘 날짜로 업데이트.
         sql = "UPDATE setting_data SET code_update='%s' limit 1"
         self.engine_JB.execute(sql % (self.open_api.today))
 
