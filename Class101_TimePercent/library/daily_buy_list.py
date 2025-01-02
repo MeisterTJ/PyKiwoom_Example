@@ -32,7 +32,7 @@ class daily_buy_list():
 
     def date_rows_setting(self):
         print("date_rows_setting!!")
-        # 날짜 지정
+        # 날짜 지정, 임의로 gs글로벌 테이블에서 date만 쭉 가져온다고 가정
         sql = "select date from `gs글로벌` where date >= '%s' group by date"
         self.date_rows = self.engine_daily_craw.execute(sql % self.start_date).fetchall()
 
@@ -75,6 +75,7 @@ class daily_buy_list():
 
             multi_list = list()
 
+            # daily_craw db의 정보를 각 날짜별로 정리한다고 보면 된다.
             for i in range(len(self.stock_item_all)):
                 code = self.stock_item_all[i][1]
                 code_name = self.stock_item_all[i][0]

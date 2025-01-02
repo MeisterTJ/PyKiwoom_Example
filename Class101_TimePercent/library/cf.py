@@ -30,7 +30,7 @@ real_daily_craw_db_name = "daily_craw"
 real_daily_buy_list_db_name = "daily_buy_list"
 
 # daily_buy_list database의 날짜 테이블을 과거 어떤 시점 부터 만들 것인지 설정 하는 변수
-start_daily_buy_list='20190102'
+start_daily_buy_list='20240101'
 
 # openapi 1회 조회 시 대기 시간(0.2 보다-> 0.3이 안정적)
 TR_REQ_TIME_INTERVAL = 0.3
@@ -39,6 +39,9 @@ TR_REQ_TIME_INTERVAL = 0.3
 TR_REQ_TIME_INTERVAL_LONG = 1
 
 # api를 최대 몇 번까지 호출 하고 봇을 끌지 설정 하는 옵션
+# 키움 증권에서 1000번 조회를 하면 에러가 생긴다는데 사실인가?
+# collector, trader 둘 다 999까지만 하고 종료하도록 설계가 되어있다.
+# 배치 파일을 통해서 collector가 꺼지면 다시 살려서 다시 실행시키고, 꺼지면 다시 실행시키고 하도록 한다. 
 max_api_call = 999
 
 # dart api key (고급클래스에서 소개)

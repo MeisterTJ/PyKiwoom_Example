@@ -115,7 +115,7 @@ class simulator_func_mysql:
 
         if self.simul_num == 1:
             # 시뮬레이팅 시작 일자(분 별 시뮬레이션의 경우 최근 1년 치 데이터만 있기 때문에 start_date 조정 필요)
-            self.simul_start_date = "20190101"
+            self.simul_start_date = "20240101"
 
             ######### 알고리즘 선택 #############
             # 매수 리스트 설정 알고리즘 번호
@@ -149,7 +149,7 @@ class simulator_func_mysql:
 
         elif self.simul_num == 2:
             # 시뮬레이팅 시작 일자
-            self.simul_start_date = "20190101"
+            self.simul_start_date = "20240101"
 
             ######### 알고리즘 선택 #############
             # 매수 리스트 설정 알고리즘 번호
@@ -179,17 +179,14 @@ class simulator_func_mysql:
         elif self.simul_num == 3:
 
             # 시뮬레이팅 시작 일자
-
-            self.simul_start_date = "20190101"
+            self.simul_start_date = "20240101"
 
             ######### 알고리즘 선택 #############
 
             # 매수 리스트 설정 알고리즘 번호
-
             self.db_to_realtime_daily_buy_list_num = 3
 
             # 매도 리스트 설정 알고리즘 번호
-
             self.sell_list_num = 2
 
             ###################################
@@ -370,7 +367,6 @@ class simulator_func_mysql:
 
     # code명으로 code_name을 가져오는 함수
     def get_name_by_code(self, code):
-
         sql = "select code_name from stock_item_all where code = '%s'"
         code_name = self.engine_daily_buy_list.execute(sql % (code)).fetchall()
         print(code_name)
@@ -446,7 +442,7 @@ class simulator_func_mysql:
     def get_daily_buy_list_by_code(self, code, date):
         # print("get_daily_buy_list_by_code 함수에 들어왔습니다!")
 
-        sql = "select * from `" + date + "` where code = '%s' group by code"
+        sql = "select * from `" + date + "` where code = '%s'"
 
         daily_buy_list = self.engine_daily_buy_list.execute(sql % (code)).fetchall()
 
@@ -475,7 +471,7 @@ class simulator_func_mysql:
 
         # 이 부분은 촬영 후 코드를 간소화 했습니다. 조건문 모두 없앴습니다.
         # check_item = 매수 했을 시 날짜가 찍혀 있다. 매수 하지 않았을 때는 0
-        sql = "select * from realtime_daily_buy_list where check_item = '%s' group by code"
+        sql = "select * from realtime_daily_buy_list where check_item = '%s' order by volume"
 
         realtime_daily_buy_list = self.engine_simulator.execute(sql % (0)).fetchall()
 
@@ -567,26 +563,37 @@ class simulator_func_mysql:
         # 5 / 20 골든크로스 buy
         if self.db_to_realtime_daily_buy_list_num == 1:
             # orderby는 거래량 많은 순서
-
+            # 목적은 5일선이 20일선을 돌파한 골든 크로스 종목들을 거래량 순서대로 나열하는것 같은데 아래의 쿼리가 잘못된 것 같다.
+            # sql = "select * from `" + date_rows_yesterday + "` a where yes_clo20 > yes_clo5 and clo5 > clo20 " \
+            #                                                 "and NOT exists (select null from stock_konex b where a.code=b.code) " \
+            #                                                 "and close < '%s' group by code"
             sql = "select * from `" + date_rows_yesterday + "` a where yes_clo20 > yes_clo5 and clo5 > clo20 " \
                                                             "and NOT exists (select null from stock_konex b where a.code=b.code) " \
-                                                            "and close < '%s' group by code"
+                                                            "and close < '%s' order by volume"
             realtime_daily_buy_list = self.engine_daily_buy_list.execute(sql % (self.invest_unit)).fetchall()
 
 
         # 5 / 40 골든크로스 buy
         elif self.db_to_realtime_daily_buy_list_num == 2:
             # orderby는 거래량 많은 순서
+            # 목적은 5일선이 40일선을 돌파한 골든 크로스 종목들을 거래량 순서대로 나열하는것 같은데 아래의 쿼리가 잘못된 것 같다.
+            # sql = "select * from `" + date_rows_yesterday + "` a where yes_clo40 > yes_clo5 and clo5 > clo40 " \
+            #                                                 "and NOT exists (select null from stock_konex b where a.code=b.code) " \
+            #                                                 "and close < '%s' group by code"
+
             sql = "select * from `" + date_rows_yesterday + "` a where yes_clo40 > yes_clo5 and clo5 > clo40 " \
                                                             "and NOT exists (select null from stock_konex b where a.code=b.code) " \
-                                                            "and close < '%s' group by code"
+                                                            "and close < '%s' order by volume"
             realtime_daily_buy_list = self.engine_daily_buy_list.execute(sql % (self.invest_unit)).fetchall()
 
 
         elif self.db_to_realtime_daily_buy_list_num == 3:
+            # sql = "select * from `" + date_rows_yesterday + "` a where d1_diff_rate > 1 " \
+            #                                                 "and NOT exists (select null from stock_konex b where a.code=b.code) " \
+            #                                                 "and close < '%s' group by code"
             sql = "select * from `" + date_rows_yesterday + "` a where d1_diff_rate > 1 " \
                                                             "and NOT exists (select null from stock_konex b where a.code=b.code) " \
-                                                            "and close < '%s' group by code"
+                                                            "and close < '%s' order by volume"
             # 아래 명령을 통해 테이블로 부터 데이터를 가져오면 리스트 형태로 realtime_daily_buy_list 에 담긴다.
             realtime_daily_buy_list = self.engine_daily_buy_list.execute(sql % (self.invest_unit)).fetchall()
 
@@ -916,7 +923,7 @@ class simulator_func_mysql:
 
     # 특정 종목의 시작가를 가져오는 함수(일별)
     def get_now_open_price_by_date(self, code, date):
-        sql = "select open from `" + date + "` where code = '%s' group by code"
+        sql = "select open from `" + date + "` where code = '%s'"
         open = self.engine_daily_buy_list.execute(sql % (code)).fetchall()
         if len(open) == 1:
             return open[0][0]
@@ -968,7 +975,7 @@ class simulator_func_mysql:
 
     # 특정 종목의 종가를 가져오는 함수
     def get_now_close_price_by_date(self, code, date):
-        sql = "select close from `" + date + "` where code = '%s' group by code"
+        sql = "select close from `" + date + "` where code = '%s' limit 1"
         return_price = self.engine_daily_buy_list.execute(sql % (code)).fetchall()
 
         if len(return_price) == 1:
@@ -978,18 +985,17 @@ class simulator_func_mysql:
 
     # 특정 종목의 어제 종가를 가져오는 함수
     def get_yes_close_price_by_date(self, code, date):
-        sql = "select close from `" + date + "` where code = '%s' group by code"
+        sql = "select close from `" + date + "` where code = '%s' limit 1"
         return_price = self.engine_daily_buy_list.execute(sql % (code)).fetchall()
 
         if len(return_price) == 1:
-
             return return_price[0][0]
         else:
             return False
 
     # 종목의 현재 일자에 대한 주가 정보를 가져 오는 함수
     def get_now_price_by_date(self, code_name, date):
-        sql = "select d1_diff_rate, close, open, high, low, volume, clo5, clo10, clo20, clo40, clo60, clo80, clo100, clo120 from `" + date + "` where code_name = '%s' group by code"
+        sql = "select d1_diff_rate, close, open, high, low, volume, clo5, clo10, clo20, clo40, clo60, clo80, clo100, clo120 from `" + date + "` where code_name = '%s' limit 1"
         rows = self.engine_daily_buy_list.execute(sql % (code_name)).fetchall()
 
         if len(rows) == 1:
@@ -1074,20 +1080,19 @@ class simulator_func_mysql:
             # select 할 컬럼은 항상 코드명, 수익률, 매도할 종목의 현재가, 수익(손실)금액
             # sql 첫 번째 라인은 항상 고정
             sql = "SELECT code, rate, present_price,valuation_profit FROM all_item_db WHERE (sell_date = '%s') " \
-                  "and (rate>='%s' or rate <= '%s') group by code"
+                  "and (rate>='%s' or rate <= '%s')"
             sell_list = self.engine_simulator.execute(sql % (0, self.sell_point, self.losscut_point)).fetchall()
 
         # 5 / 20 이동 평균선 데드크로스 이거나, losscut_point(손절 기준 수익률) 이하로 떨어지면 손절하는 알고리즘
         elif self.sell_list_num == 2:
             sql = "SELECT code, rate, present_price,valuation_profit FROM all_item_db WHERE (sell_date = '%s') " \
-                  "and ((clo5 < clo20) or rate <= '%s') group by code"
+                  "and ((clo5 < clo20) or rate <= '%s')"
             sell_list = self.engine_simulator.execute(sql % (0, self.losscut_point)).fetchall()
-
 
         # 5 / 40 이동 평균선 데드크로스 이거나, losscut_point(손절 기준 수익률) 이하로 떨어지면 손절하는 알고리즘
         elif self.sell_list_num == 3:
             sql = "SELECT code, rate, present_price,valuation_profit FROM all_item_db WHERE (sell_date = '%s') " \
-                  "and ((clo5 < clo40) or rate <= '%s') group by code"
+                  "and ((clo5 < clo40) or rate <= '%s')"
 
             sell_list = self.engine_simulator.execute(sql % (0, self.losscut_point)).fetchall()
 
@@ -1365,25 +1370,25 @@ class simulator_func_mysql:
                 sql = "UPDATE jango_data SET today_buy_today_profitcut_count=(select count(*) from (select code from all_item_db where buy_date like '%s' and sell_date like '%s' and (sell_rate >= '%s' ) group by code ) b) WHERE date='%s'"
                 self.engine_simulator.execute(sql % ("%%" + rows[i][0] + "%%", "%%" + rows[i][0] + "%%", 0, rows[i][0]))
 
-                sql = "UPDATE jango_data SET today_buy_today_profitcut_rate= round(today_buy_today_profitcut_count /today_buy_count *100,2) WHERE date = '%s'"
+                sql = "UPDATE jango_data SET today_buy_today_profitcut_rate= round(CAST(today_buy_today_profitcut_count AS DECIMAL) /today_buy_count *100,2) WHERE date = '%s' AND today_buy_count > 0"
                 self.engine_simulator.execute(sql % (rows[i][0]))
 
                 sql = "UPDATE jango_data SET today_buy_today_losscut_count=(select count(*) from (select code from all_item_db where buy_date like '%s' and sell_date like '%s' and sell_rate < '%s'  group by code ) b) WHERE date='%s'"
                 self.engine_simulator.execute(sql % ("%%" + rows[i][0] + "%%", "%%" + rows[i][0] + "%%", 0, rows[i][0]))
 
-                sql = "UPDATE jango_data SET today_buy_today_losscut_rate=round(today_buy_today_losscut_count /today_buy_count *100,2) WHERE date = '%s'"
+                sql = "UPDATE jango_data SET today_buy_today_losscut_rate=round(CAST(today_buy_today_losscut_count AS DECIMAL) /today_buy_count * 100,2) WHERE date = '%s' AND today_buy_count > 0"
                 self.engine_simulator.execute(sql % (rows[i][0]))
 
                 sql = "UPDATE jango_data SET today_buy_total_profitcut_count=(select count(*) from (select code from all_item_db where buy_date like '%s' and sell_rate >= '%s'  group by code ) b) WHERE date='%s'"
                 self.engine_simulator.execute(sql % ("%%" + rows[i][0] + "%%", 0, rows[i][0]))
 
-                sql = "UPDATE jango_data SET today_buy_total_profitcut_rate=round(today_buy_total_profitcut_count /today_buy_count *100,2) WHERE date = '%s'"
+                sql = "UPDATE jango_data SET today_buy_total_profitcut_rate=round(CAST(today_buy_total_profitcut_count AS DECIMAL) /today_buy_count * 100,2) WHERE date = '%s' AND today_buy_count > 0"
                 self.engine_simulator.execute(sql % (rows[i][0]))
 
                 sql = "UPDATE jango_data SET today_buy_total_losscut_count=(select count(*) from (select code from all_item_db where buy_date like '%s' and sell_rate < '%s'  group by code ) b) WHERE date='%s'"
                 self.engine_simulator.execute(sql % ("%%" + rows[i][0] + "%%", 0, rows[i][0]))
 
-                sql = "UPDATE jango_data SET today_buy_total_losscut_rate=round(today_buy_total_losscut_count/today_buy_count*100,2) WHERE date = '%s'"
+                sql = "UPDATE jango_data SET today_buy_total_losscut_rate=round(CAST(today_buy_total_losscut_count AS DECIMAL)/today_buy_count*100,2) WHERE date = '%s' AND today_buy_count > 0"
                 self.engine_simulator.execute(sql % (rows[i][0]))
         print('jango_data 최종 정산 완료')
 
@@ -1559,7 +1564,6 @@ def escape_percentage(conn, clauseelement, multiparams, params):
             if replaced == clauseelement:
                 break
             clauseelement = replaced
-
     return clauseelement, multiparams, params
 
 if __name__ == '__main__':

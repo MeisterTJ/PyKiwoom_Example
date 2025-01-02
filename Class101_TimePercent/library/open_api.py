@@ -136,7 +136,7 @@ class open_api(QAxWidget):
     # 보유량 가져오는 함수
     def get_holding_amount(self, code):
         logger.debug("get_holding_amount 함수에 들어왔습니다!")
-        sql = "select holding_amount from possessed_item where code = '%s' group by code"
+        sql = "select holding_amount from possessed_item where code = '%s'"
         rows = self.engine_JB.execute(sql % (code)).fetchall()
         if len(rows):
             return rows[0][0]
@@ -380,11 +380,11 @@ class open_api(QAxWidget):
             # logger.debug("opt10081_req collector!!!")
             # logger.debug("Get an item info !!!!")
             self.collector_opt10081(rqname, trcode)
-        elif rqname == "opw00001_req":
+        elif rqname == "opw00001_req": # 예수금 상세 현황 요청
             # logger.debug("opw00001_req!!!")
             # logger.debug("Get an de_deposit!!!")
             self._opw00001(rqname, trcode)
-        elif rqname == "opw00018_req":
+        elif rqname == "opw00018_req":      # 계좌 평가 잔고내역 요청
             # logger.debug("opw00018_req!!!")
             # logger.debug("Get the possessed item !!!!")
             self._opw00018(rqname, trcode)

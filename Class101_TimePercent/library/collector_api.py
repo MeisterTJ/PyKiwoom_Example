@@ -42,6 +42,7 @@ class collector_api():
         sql = "select code_update,jango_data_db_check, possessed_item, today_profit, final_chegyul_check, db_to_buy_list,today_buy_list, daily_crawler , min_crawler, daily_buy_list from setting_data limit 1"
 
         # sql 쿼리문 실행
+        # setting_data 테이블의 각 열의 날짜를 업데이트 하면서 그 열과 관련된 db를 업데이트 할 것이다.
         rows = self.engine_JB.execute(sql).fetchall()
 
         # stock_item_all(kospi,kosdaq,konex)
@@ -64,6 +65,7 @@ class collector_api():
             self.open_api.db_to_possesed_item()
             self.open_api.setting_data_possesed_item()
 
+        # stock_item_all 테이블에 각 개별 종목들이 업데이트하고 체크한다.
         # daily_craw db 업데이트
         if rows[0][7] != self.open_api.today:
             self.daily_crawler_check()
@@ -241,6 +243,7 @@ class collector_api():
         if type in checking_stocks:
             stock_df = stock_df[stock_df['code_name'].map(len) > 0]
 
+        # daily 및 min crawler를 매일 다시 실행시켜주기 위해 stock_item_all에 있는 두 column 값을 0으로 한다.
         if type == 'item_all':
             stock_df['check_daily_crawler'] = "0"
             stock_df['check_min_crawler'] = "0"
@@ -324,6 +327,7 @@ class collector_api():
         self.dc.cc.get_item_managing()
         self.dc.cc.get_item_insincerity()
 
+        # stock_data에 가져온 모든 종목들을 넣는다.
         # OrderedDict를 사용해 순서 보장
         stock_data = OrderedDict(
             kospi=self.dc.cc.code_df_kospi,
@@ -368,7 +372,9 @@ class collector_api():
             stock_data['etf'] = self.remove_code_included_char(DataFrame([(c, '') for c in self._get_code_list_by_market(8) if c],
                                                                          columns=['code', 'code_name']))
 
+        # _type에는 kospi, konex, kosdaq 등 종목 분류가 들어가게 된다.
         for _type, data in stock_data.items():
+            # 여기서 각 종목들이 업데이트 되어야 함을 stock_item_all 혹은 기타 테이블에 업데이트 한다.
             stock_data[_type] = self._stock_to_sql(data, _type)
 
         # stock_insincerity와 stock_managing의 종목은 따로 중복하여 넣지 않음
@@ -520,6 +526,7 @@ class collector_api():
         return check_item_gubun
 
     def set_daily_crawler_table(self, code, code_name):
+        # 일단 open_api로 부터 오늘 날짜까지의 데이터를 가져온다.
         df = self.open_api.get_total_data(code, code_name, self.open_api.today)
         if len(df) == 0:
             return 1
@@ -614,10 +621,12 @@ class collector_api():
 
         df_temp['code'] = code
         df_temp['code_name'] = code_name
+        # 전날 종가에 비해서 얼마나 상승/하락을 했는지에 대한 비율
         df_temp['d1_diff_rate'] = round(
             (df_temp['close'] - df_temp['close'].shift(1)) / df_temp['close'].shift(1) * 100, 2)
 
         # 하나씩 추가할때는 append 아니면 replace
+        # 이동 평균
         clo5 = df_temp['close'].rolling(window=5).mean()
         clo10 = df_temp['close'].rolling(window=10).mean()
         clo20 = df_temp['close'].rolling(window=20).mean()
@@ -635,6 +644,7 @@ class collector_api():
         df_temp['clo100'] = clo100
         df_temp['clo120'] = clo120
 
+        # %일 단순 이동평균값 대비 종가 상승, 하락률
         df_temp['clo5_diff_rate'] = round((df_temp['close'] - clo5) / clo5 * 100, 2)
         df_temp['clo10_diff_rate'] = round((df_temp['close'] - clo10) / clo10 * 100, 2)
         df_temp['clo20_diff_rate'] = round((df_temp['close'] - clo20) / clo20 * 100, 2)
@@ -643,7 +653,8 @@ class collector_api():
         df_temp['clo80_diff_rate'] = round((df_temp['close'] - clo80) / clo80 * 100, 2)
         df_temp['clo100_diff_rate'] = round((df_temp['close'] - clo100) / clo100 * 100, 2)
         df_temp['clo120_diff_rate'] = round((df_temp['close'] - clo120) / clo120 * 100, 2)
-
+        
+        # 전날 단순 이동 평균 값 (clo(이동평균))을 하나씩 땡긴것
         df_temp['yes_clo5'] = df_temp['clo5'].shift(1)
         df_temp['yes_clo10'] = df_temp['clo10'].shift(1)
         df_temp['yes_clo20'] = df_temp['clo20'].shift(1)
@@ -653,6 +664,7 @@ class collector_api():
         df_temp['yes_clo100'] = df_temp['clo100'].shift(1)
         df_temp['yes_clo120'] = df_temp['clo120'].shift(1)
 
+        # 거래량 이동 평균값.
         df_temp['vol5'] = df_temp['volume'].rolling(window=5).mean()
         df_temp['vol10'] = df_temp['volume'].rolling(window=10).mean()
         df_temp['vol20'] = df_temp['volume'].rolling(window=20).mean()
