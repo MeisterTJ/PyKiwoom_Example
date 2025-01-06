@@ -22,7 +22,7 @@ pymysql.install_as_MySQLdb()
 
 
 class simulator_func_mysql:
-    def __init__(self, simul_num, op, db_name):
+    def __init__(self, simul_num, option, db_name):
         self.simul_num = int(simul_num)
 
         # scraper할 때 start date 가져오기 위해서
@@ -30,7 +30,7 @@ class simulator_func_mysql:
             self.date_setting()
 
         # option이 reset일 경우 실행
-        elif op == 'reset':
+        elif option == 'reset':
             self.op = 'reset'
             self.simul_reset = True
             self.db_name = db_name
@@ -38,21 +38,21 @@ class simulator_func_mysql:
             self.rotate_date()
 
         # option이 real일 경우 실행(시뮬레이터와 무관)
-        elif op == 'real':
+        elif option == 'real':
             self.op = 'real'
             self.simul_reset = False
             self.db_name = db_name
             self.variable_setting()
 
         #  option이 continue 일 경우 실행
-        elif op == 'continue':
+        elif option == 'continue':
             self.op = 'continue'
             self.simul_reset = False
             self.db_name = db_name
             self.variable_setting()
             self.rotate_date()
         else:
-            print("simul_num or op 어느 것도 만족 하지 못함 simul_num : %s ,op : %s !!", simul_num, op)
+            print("simul_num or option 어느 것도 만족 하지 못함 simul_num : %s ,option : %s !!", simul_num, option)
 
     # 마지막으로 구동했던 시뮬레이터의 날짜를 가져온다.
     def get_jango_data_last_date(self):
@@ -113,16 +113,17 @@ class simulator_func_mysql:
         ###!@####################################################################################################################
         # 아래 부터는 알고리즘 별로 별도의 설정을 해주는 부분
 
+        # 1번 알고리즘을 돌리겠다.
         if self.simul_num == 1:
             # 시뮬레이팅 시작 일자(분 별 시뮬레이션의 경우 최근 1년 치 데이터만 있기 때문에 start_date 조정 필요)
             self.simul_start_date = "20240101"
 
             ######### 알고리즘 선택 #############
             # 매수 리스트 설정 알고리즘 번호
-            self.db_to_realtime_daily_buy_list_num = 1
+            self.db_to_realtime_daily_buy_algo_num = 1
 
             # 매도 리스트 설정 알고리즘 번호
-            self.sell_list_num = 1
+            self.sell_algo_num = 1
             ###################################
 
             # 초기 투자자금(시뮬레이션에서의 초기 투자 금액. 모의투자는 신청 당시의 금액이 초기 투자 금액이라고 보시면 됩니다)
@@ -153,9 +154,9 @@ class simulator_func_mysql:
 
             ######### 알고리즘 선택 #############
             # 매수 리스트 설정 알고리즘 번호
-            self.db_to_realtime_daily_buy_list_num = 1
+            self.db_to_realtime_daily_buy_algo_num = 1
             # 매도 리스트 설정 알고리즘 번호
-            self.sell_list_num = 2
+            self.sell_algo_num = 2
             ###################################
             # 초기 투자자금
             # 주의! start_invest_price 는 모의투자 초기 자본금과 별개. 시뮬레이션에서만 적용.
@@ -184,10 +185,10 @@ class simulator_func_mysql:
             ######### 알고리즘 선택 #############
 
             # 매수 리스트 설정 알고리즘 번호
-            self.db_to_realtime_daily_buy_list_num = 3
+            self.db_to_realtime_daily_buy_algo_num = 3
 
             # 매도 리스트 설정 알고리즘 번호
-            self.sell_list_num = 2
+            self.sell_algo_num = 2
 
             ###################################
 
@@ -561,7 +562,7 @@ class simulator_func_mysql:
     # 매수 할 종목의 리스트를 선정 알고리즘
     def db_to_realtime_daily_buy_list(self, date_rows_today, date_rows_yesterday, i):
         # 5 / 20 골든크로스 buy
-        if self.db_to_realtime_daily_buy_list_num == 1:
+        if self.db_to_realtime_daily_buy_algo_num == 1:
             # orderby는 거래량 많은 순서
             # 목적은 5일선이 20일선을 돌파한 골든 크로스 종목들을 거래량 순서대로 나열하는것 같은데 아래의 쿼리가 잘못된 것 같다.
             # sql = "select * from `" + date_rows_yesterday + "` a where yes_clo20 > yes_clo5 and clo5 > clo20 " \
@@ -574,7 +575,7 @@ class simulator_func_mysql:
 
 
         # 5 / 40 골든크로스 buy
-        elif self.db_to_realtime_daily_buy_list_num == 2:
+        elif self.db_to_realtime_daily_buy_algo_num == 2:
             # orderby는 거래량 많은 순서
             # 목적은 5일선이 40일선을 돌파한 골든 크로스 종목들을 거래량 순서대로 나열하는것 같은데 아래의 쿼리가 잘못된 것 같다.
             # sql = "select * from `" + date_rows_yesterday + "` a where yes_clo40 > yes_clo5 and clo5 > clo40 " \
@@ -587,7 +588,7 @@ class simulator_func_mysql:
             realtime_daily_buy_list = self.engine_daily_buy_list.execute(sql % (self.invest_unit)).fetchall()
 
 
-        elif self.db_to_realtime_daily_buy_list_num == 3:
+        elif self.db_to_realtime_daily_buy_algo_num == 3:
             # sql = "select * from `" + date_rows_yesterday + "` a where d1_diff_rate > 1 " \
             #                                                 "and NOT exists (select null from stock_konex b where a.code=b.code) " \
             #                                                 "and close < '%s' group by code"
@@ -1076,7 +1077,7 @@ class simulator_func_mysql:
         # 단순히 현재 보유 종목의 수익률이
         # 익절 기준 수익률(self.sell_point) 이 넘거나,
         # 손절 기준 수익률(self.losscut_point) 보다 떨어지면 파는 알고리즘
-        if self.sell_list_num == 1:
+        if self.sell_algo_num == 1:
             # select 할 컬럼은 항상 코드명, 수익률, 매도할 종목의 현재가, 수익(손실)금액
             # sql 첫 번째 라인은 항상 고정
             sql = "SELECT code, rate, present_price,valuation_profit FROM all_item_db WHERE (sell_date = '%s') " \
@@ -1084,13 +1085,13 @@ class simulator_func_mysql:
             sell_list = self.engine_simulator.execute(sql % (0, self.sell_point, self.losscut_point)).fetchall()
 
         # 5 / 20 이동 평균선 데드크로스 이거나, losscut_point(손절 기준 수익률) 이하로 떨어지면 손절하는 알고리즘
-        elif self.sell_list_num == 2:
+        elif self.sell_algo_num == 2:
             sql = "SELECT code, rate, present_price,valuation_profit FROM all_item_db WHERE (sell_date = '%s') " \
                   "and ((clo5 < clo20) or rate <= '%s')"
             sell_list = self.engine_simulator.execute(sql % (0, self.losscut_point)).fetchall()
 
         # 5 / 40 이동 평균선 데드크로스 이거나, losscut_point(손절 기준 수익률) 이하로 떨어지면 손절하는 알고리즘
-        elif self.sell_list_num == 3:
+        elif self.sell_algo_num == 3:
             sql = "SELECT code, rate, present_price,valuation_profit FROM all_item_db WHERE (sell_date = '%s') " \
                   "and ((clo5 < clo40) or rate <= '%s')"
 

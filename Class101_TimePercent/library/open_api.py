@@ -87,8 +87,8 @@ class open_api(QAxWidget):
         # 아래 simulator_func_mysql 클래스를 호출 할 때 두번째 인자에 real을 보낸다.
         self.sf = simulator_func_mysql(self.simul_num, 'real', self.db_name)
         logger.debug("self.sf.simul_num(알고리즘 번호) : %s", self.sf.simul_num)
-        logger.debug("self.sf.db_to_realtime_daily_buy_list_num : %s", self.sf.db_to_realtime_daily_buy_list_num)
-        logger.debug("self.sf.sell_list_num : %s", self.sf.sell_list_num)
+        logger.debug("self.sf.db_to_realtime_daily_buy_list_num : %s", self.sf.db_to_realtime_daily_buy_algo_num)
+        logger.debug("self.sf.sell_list_num : %s", self.sf.sell_algo_num)
 
         # 만약에 setting_data 테이블이 존재하지 않으면 구축 하는 로직
         if not self.sf.is_simul_table_exist(self.db_name, "setting_data"):
