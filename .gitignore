@@ -1,0 +1,6 @@
+.idea/*
+!.idea/misc.xml
+!.idea/modules.xml
+!.idea/vcs.xml
+__pycache__/
+*.pyc
