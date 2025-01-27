@@ -218,8 +218,10 @@ class simulator_func_mysql:
             sys.exit(1)
 
         #########################################################################################################################
+        # db 이름으로 연결
         self.db_name_setting()
 
+        # 'reset'
         if self.op != 'real':
             # database, table 초기화 함수
             self.table_setting()
@@ -255,7 +257,9 @@ class simulator_func_mysql:
     # 데이터베이스와 테이블을 세팅하기 위한 함수
     def table_setting(self):
         print("self.simul_reset" + str(self.simul_reset))
+
         # 시뮬레이터를 초기화 하고 처음부터 구축하기 위한 로직
+        # option이 reset일 경우 True이다.
         if self.simul_reset:
             print("table reset setting !!! ")
             self.init_database()
@@ -288,10 +292,12 @@ class simulator_func_mysql:
         if self.is_simul_database_exist() == False:
             sql = 'CREATE DATABASE %s'
             self.db_conn.cursor().execute(sql % (self.db_name))
+            # commit을 하지 않으면 변경 사항은 메모리에만 머무른다.
             self.db_conn.commit()
 
     # 데이터베이스를 삭제하는 함수
     def drop_database(self):
+        # 데이터 베이스가 있을 경우에만 삭제
         if self.is_simul_database_exist():
             print("drop!!!!")
             sql = "drop DATABASE %s"
@@ -300,12 +306,15 @@ class simulator_func_mysql:
 
     # 데이터베이스의 존재 유무를 파악하는 함수.
     def is_simul_database_exist(self):
+        # Information_schema.SCHEMATA 는 표준 SQL 시스템 뷰이다.
+        # 현재 데이터베이스 서버에 존재하는 모든 데이터베이스 스키마의 정보를 포함한다.
+        # SELECT 1은 특정 조건을 만족하는 행이 있는지만 확인하기 위한 목적으로 데이터를 반환하지 않는다. 만족하면 1을 반환한다.
         sql = "SELECT 1 FROM Information_schema.SCHEMATA WHERE SCHEMA_NAME = '%s'"
         rows = self.engine_daily_buy_list.execute(sql % (self.db_name)).fetchall()
         print("rows : ", rows)
-        if len(rows):
+        if len(rows):   # rows : [(1,}]
             return True
-        else:
+        else:  # rows : []
             return False
 
     # 오늘 날짜를 설정하는 함수
@@ -316,12 +325,16 @@ class simulator_func_mysql:
 
     # DB 이름 세팅 함수
     def db_name_setting(self):
+        # 여기서 현재 db_name은 0이다.
         self.engine_simulator = create_engine(
             "mysql+mysqldb://" + cf.db_id + ":" + cf.db_passwd + "@" + cf.db_ip + ":" + cf.db_port + "/" + str(
                 self.db_name),
             encoding='utf-8')
+
+        # 실전 투자가 아닐 경우
         if self.op != "real":
             # db_name을 setting 한다.
+            # db_name은 simulator1 이나 simualtor2 등이 되겠지.
             self.db_name = "simulator" + str(self.simul_num)
             self.engine_simulator = create_engine(
                 "mysql+mysqldb://" + cf.db_id + ":" + cf.db_passwd + "@" + cf.db_ip + ":" + cf.db_port + "/" + str(
@@ -338,12 +351,15 @@ class simulator_func_mysql:
             "mysql+mysqldb://" + cf.db_id + ":" + cf.db_passwd + "@" + cf.db_ip + ":" + cf.db_port + "/daily_buy_list",
             encoding='utf-8')
 
+        # before_excute는 SQLAlchemy의 이벤트 중 하나로, 데이터베이스에 SQL 쿼리가 실행되기 전에 호출된다.
+        # escape_percentage는 이벤트 발생 시 실행될 함수이다.
         event.listen(self.engine_simulator, 'before_execute', escape_percentage, retval=True)
         event.listen(self.engine_daily_craw, 'before_execute', escape_percentage, retval=True)
         event.listen(self.engine_craw, 'before_execute', escape_percentage, retval=True)
         event.listen(self.engine_daily_buy_list, 'before_execute', escape_percentage, retval=True)
 
         # 특정 데이터 베이스가 아닌, mysql 에 접속하는 객체
+        # SQLAlchemy 라이브러리가 아닌 PyMySQL 라이브러리
         self.db_conn = pymysql.connect(host=cf.db_ip, port=int(cf.db_port), user=cf.db_id, password=cf.db_passwd,
                                        charset='utf8')
 
@@ -702,6 +718,7 @@ class simulator_func_mysql:
     def init_df_jango(self):
         jango_temp = {'id': []}
 
+        # 이것은 컬럼을 만들어주는 작업이다. 
         self.jango = DataFrame(jango_temp,
                                columns=['date', 'today_earning_rate', 'sum_valuation_profit', 'total_profit',
                                         'today_profit',
@@ -1338,11 +1355,13 @@ class simulator_func_mysql:
         # 'fail'은 데이터베이스에 테이블이 있다면 아무 동작도 수행하지 않는다.
         # 'replace'는 테이블이 존재하면 기존 테이블을 삭제하고 새로 테이블을 생성한 후 데이터를 삽입한다.
         # 'append'는 테이블이 존재하면 데이터만을 추가한다.
+        # DataFrame에서 제공하는 to_sql 함수를 통해 self.engine_simulator의 jango_data 테이블에 jango를 추가한다.
         self.jango.to_sql('jango_data', self.engine_simulator, if_exists='append')
 
         #     # today_earning_rate
         sql = "update jango_data set today_earning_rate =round(today_profit / total_invest * '%s',2) WHERE date='%s'"
         # rows[i][0] 하는 이유는 rows[i]는 튜플( )로 나온다 그 튜플의 원소를 꺼내기 위해 rows[i]에 [0]을 추가
+        # jango_data에서 오늘 날짜 데이터를 찾아서 수익률을 계산해서 업데이트 한다.
         self.engine_simulator.execute(sql % (100, date_rows_today))
 
     # 시뮬레이션이 다 끝났을 때 마지막 jango_data 정리
@@ -1557,10 +1576,14 @@ class simulator_func_mysql:
 
 
 # 수업 후 아래 함수 추가 되었습니다
+# clauseelement : 실행하려는 SQl 쿼리, 이 값에서 % 문자를 찾고 대체한다.
 def escape_percentage(conn, clauseelement, multiparams, params):
     # execute로 실행한 sql문이 들어왔을 때 %를 %%로 replace
+    # %를 %%로 escape 처리한다. 데이터베이스 드라이버가 %를 포매팅 기호로 해석하지 못하게 만든다.
     if isinstance(clauseelement, str) and '%' in clauseelement and multiparams is not None:
         while True:
+            # 정규식을 사용하여 %를 %%로 변환한다.
+            # %가 %로 시작하거나 %s 뒤에 오는 경우는 제외(이미 이스케이프 된 경우)
             replaced = re.sub(r'([^%])%([^%s])', r'\1%%\2', clauseelement)
             if replaced == clauseelement:
                 break
