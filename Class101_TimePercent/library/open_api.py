@@ -372,6 +372,7 @@ class open_api(QAxWidget):
         else:
             self.remained_data = False
         # print("self.py_gubun!!", self.py_gubun)
+        # 주식 일봉 데이터 조회 (최대 600일치) : 날짜, 시가, 고가, 저가, 종가, 거래량
         if rqname == "opt10081_req" and self.py_gubun == "trader":
             # logger.debug("opt10081_req trader!!!")
             # logger.debug("Get an item info !!!!")
@@ -380,30 +381,37 @@ class open_api(QAxWidget):
             # logger.debug("opt10081_req collector!!!")
             # logger.debug("Get an item info !!!!")
             self.collector_opt10081(rqname, trcode)
-        elif rqname == "opw00001_req": # 예수금 상세 현황 요청
+        # 예수금 상세 현황 요청
+        elif rqname == "opw00001_req": 
             # logger.debug("opw00001_req!!!")
             # logger.debug("Get an de_deposit!!!")
             self._opw00001(rqname, trcode)
-        elif rqname == "opw00018_req":      # 계좌 평가 잔고내역 요청
+        # 계좌 평가 잔고내역 요청
+        elif rqname == "opw00018_req":      
             # logger.debug("opw00018_req!!!")
             # logger.debug("Get the possessed item !!!!")
             self._opw00018(rqname, trcode)
+        # 실현 손익 데이터 조회
         elif rqname == "opt10074_req":
             # logger.debug("opt10074_req!!!")
             # logger.debug("Get the profit")
             self._opt10074(rqname, trcode)
+        #     
         elif rqname == "opw00015_req":
             # logger.debug("opw00015_req!!!")
             # logger.debug("deal list!!!!")
             self._opw00015(rqname, trcode)
+        # 체결 내역 조회
         elif rqname == "opt10076_req":
             # logger.debug("opt10076_req")
             # logger.debug("chegyul list!!!!")
             self._opt10076(rqname, trcode)
+        # 당일 수익률 조회
         elif rqname == "opt10073_req":
             # logger.debug("opt10073_req")
             # logger.debug("Get today profit !!!!")
             self._opt10073(rqname, trcode)
+        # 현재부터 과거 900개 분봉 데이터 제공 (특정 날짜부터 분봉 데이터를 조회하려면 opt10079 사용)
         elif rqname == "opt10080_req":
             # logger.debug("opt10080_req!!!")
             # logger.debug("Get an de_deposit!!!")
@@ -635,6 +643,7 @@ class open_api(QAxWidget):
         self.set_input_value("종목코드", code)
         self.set_input_value("틱범위", 1)
         self.set_input_value("수정주가구분", 1)
+        # opt10080_req는 분봉 데이터를 가져온다. 현재 시점부터 과거의 900개의 데이터를 가져온다.
         self.comm_rq_data("opt10080_req", "opt10080", 0, "1999")
 
         self.craw_table_exist = False
@@ -654,6 +663,7 @@ class open_api(QAxWidget):
             self.set_input_value("틱범위", 1)
             # self.set_input_value("기준일자", start)
             self.set_input_value("수정주가구분", 1)
+            # 데이터를 더 가져올려면 3번째 인자인 prevNext를 2로 세팅해야 한다. 
             self.comm_rq_data("opt10080_req", "opt10080", 2, "1999")
 
             if not self.ohlcv or self.ohlcv['date'][-1] < self.craw_db_last_min:
