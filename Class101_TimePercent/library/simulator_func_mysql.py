@@ -22,6 +22,7 @@ pymysql.install_as_MySQLdb()
 
 
 class simulator_func_mysql:
+    # ex) 1, 'real', Jackbot1_imi1
     def __init__(self, simul_num, option, db_name):
         self.simul_num = int(simul_num)
 
@@ -334,7 +335,7 @@ class simulator_func_mysql:
                 self.db_name),
             encoding='utf-8')
 
-        # 실전 투자가 아닐 경우
+        # 실전 및 모의 투자가 아닐 경우 : 시뮬레이터
         if self.op != "real":
             # db_name을 setting 한다.
             # db_name은 simulator1 이나 simualtor2 등이 되겠지.
@@ -578,6 +579,7 @@ class simulator_func_mysql:
     # 여기서 sql문의 date는 반드시 어제 일자여야 한다. -> 어제 일자 기준 반영된 데이터로 종목을 선정해야함.
     ##!@####################################################################################################################################################################################
     # 매수 할 종목의 리스트를 선정 알고리즘
+    # date_rows_yesterday의 날짜를 기반으로 사기로 결정한 종목들을 date_rows_today에 매수한다는 개념.
     def db_to_realtime_daily_buy_list(self, date_rows_today, date_rows_yesterday, i):
         # 5일선 / 20일선 골든크로스 buy
         if self.db_to_realtime_daily_buy_algo_num == 1:
@@ -651,8 +653,8 @@ class simulator_func_mysql:
             df_realtime_daily_buy_list['code'] = df_realtime_daily_buy_list['code'].apply(
                 lambda x: "{:0>6d}".format(int(x)))
 
-            # 시뮬레이터의 경우
-            if self.op != 'real': # reset 일 경우
+            # 시뮬레이터의 경우 : reset일 경우
+            if self.op != 'real':
                 df_realtime_daily_buy_list['check_item'] = int(0)
                 # [to_sql]
                 # df_realtime_daily_buy_list 라는 데이터프레임을
@@ -670,6 +672,7 @@ class simulator_func_mysql:
 
                 # 현재 보유 중인 종목은 매수 리스트(realtime_daily_buy_list) 에서 제거 하는 로직
                 # 보유하고 있는데 또 사려고 하면 안되니까 삭제.
+                # 오늘 매수하였거나, 매도 날짜가 0이거나(아직 안팔고 갖고 있음), 오늘 매도한 종목들은 제외하고 싶다. 
                 if self.is_simul_table_exist(self.db_name, "all_item_db"):
                     sql = "delete from realtime_daily_buy_list where code in (select code from all_item_db where sell_date = '%s' or buy_date = '%s' or sell_date = '%s')"
                     # delete는 리턴 값이 없기 때문에 fetchall 쓰지 않는다.
@@ -683,13 +686,13 @@ class simulator_func_mysql:
                 # 최종적으로 realtime_daily_buy_list 테이블에 저장 된 종목들을 가져와서 멤버에 넣는다.
                 self.get_realtime_daily_buy_list()
 
-            # 모의, 실전 투자 봇 의 경우
+            # 모의, 실전 투자 봇 의 경우 'real' 일 경우
             else:
                 # check_item 컬럼에 0 으로 setting
                 df_realtime_daily_buy_list['check_item'] = int(0)
                 df_realtime_daily_buy_list.to_sql('realtime_daily_buy_list', self.engine_simulator, if_exists='replace')
 
-                # 현재 보유 중인 종목들은 삭제
+                # 매수 대기 종목들 중에서 현재 보유 중인 종목들은 삭제한다.
                 sql = "delete from realtime_daily_buy_list where code in (select code from possessed_item)"
                 self.engine_simulator.execute(sql)
 
@@ -935,6 +938,7 @@ class simulator_func_mysql:
     # daily_buy_list에 일자 테이블이 존재하는지 확인하는 함수
     def is_date_exist(self, date):
         print("is_date_exist 함수에 들어왔습니다!", date)
+        # information_schema.tables 는 테이블의 메타 정보를 담고 있는 데이터베이스이다.
         sql = "select 1 from information_schema.tables where table_schema ='daily_buy_list' and table_name = '%s'"
         rows = self.engine_daily_buy_list.execute(sql % (date)).fetchall()
         if len(rows) == 1:

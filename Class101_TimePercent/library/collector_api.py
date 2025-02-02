@@ -34,7 +34,7 @@ class collector_api():
                                 self.open_api.cf.real_daily_buy_list_db_name)
         self.dbl = daily_buy_list()
 
-    # 콜렉팅을 실행하는 함수
+    # 콜렉팅을 실행하는 함수 (함수 이름이 왜 이모양이냐)
     # 매일 돌면서 리스트들을 한 번씩 업데이트해준다.
     def code_update_check(self):
         logger.debug("code_update_check 함수에 들어왔습니다.")

@@ -65,6 +65,7 @@ def timedout_exit(widget):
     sys.exit(-1)
 
 
+# 키움 증권 API에 연결해서 작업을 하는 클래스
 class open_api(QAxWidget):
     def __init__(self):
         super().__init__()
@@ -184,11 +185,13 @@ class open_api(QAxWidget):
             # 금일 수익률 표시 하는게 달라서(중요X)
             self.mod_gubun = 100
 
-        elif self.account_number == cf.imi1_account:  # 모의1
+        # 모의투자 1
+        elif self.account_number == cf.imi1_account:  
             logger.debug("모의투자 1!!")
             self.simul_num = cf.imi1_simul_num
             # JackBot1
             self.db_name_setting(cf.imi1_db_name)
+            # 수익률 표시할때 100으로 나눠줄지 1로 나눠줄지에 대한 차이이다. (중요X)
             self.mod_gubun = 1
 
         else:
