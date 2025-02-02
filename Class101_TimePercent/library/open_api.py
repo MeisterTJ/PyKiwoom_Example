@@ -111,7 +111,7 @@ class open_api(QAxWidget):
         sql = "select invest_unit from setting_data limit 1"
         # 데이타 Fetch
         # rows 는 list안에 튜플이 있는 [()] 형태로 받아온다
-        return self.engine_JB.execute(sql).fetchall()[0][0]
+        return self.engine_jackbot.execute(sql).fetchall()[0][0]
 
     # simulator_func_mysql 에서 설정한 값을 가져오는 함수
     def sf_variable_setting(self):
@@ -137,7 +137,7 @@ class open_api(QAxWidget):
     def get_holding_amount(self, code):
         logger.debug("get_holding_amount 함수에 들어왔습니다!")
         sql = "select holding_amount from possessed_item where code = '%s'"
-        rows = self.engine_JB.execute(sql % (code)).fetchall()
+        rows = self.engine_jackbot.execute(sql % (code)).fetchall()
         if len(rows):
             return rows[0][0]
         else:
@@ -147,7 +147,7 @@ class open_api(QAxWidget):
     # setting_data에 invest_unit값이 설정 되어 있는지 확인 하는 함수
     def check_set_invest_unit(self):
         sql = "select invest_unit, set_invest_unit from setting_data limit 1"
-        rows = self.engine_JB.execute(sql).fetchall()
+        rows = self.engine_jackbot.execute(sql).fetchall()
         if rows[0][1] == self.today:
             self.invest_unit = rows[0][0]
             return True
@@ -164,13 +164,16 @@ class open_api(QAxWidget):
         # 이런식으로 변수에 값 할당
         self.invest_unit = self.sf.invest_unit
         sql = "UPDATE setting_data SET invest_unit='%s',set_invest_unit='%s' limit 1"
-        self.engine_JB.execute(sql % (self.invest_unit, self.today))
+        self.engine_jackbot.execute(sql % (self.invest_unit, self.today))
 
     # 변수 설정 함수
     def variable_setting(self):
         logger.debug("variable_setting 함수에 들어왔다.")
+
         self.get_today_buy_list_code = 0
+        # cf에는 프로그램 세팅 값들이 들어있다. 
         self.cf = cf
+
         self.reset_opw00018_output()
         # 아래 분기문은 실전 투자 인지, 모의 투자 인지 결정
         if self.account_number == cf.real_account:  # 실전
@@ -181,7 +184,7 @@ class open_api(QAxWidget):
             # 금일 수익률 표시 하는게 달라서(중요X)
             self.mod_gubun = 100
 
-        elif self.account_number == cf.imi1_accout:  # 모의1
+        elif self.account_number == cf.imi1_account:  # 모의1
             logger.debug("모의투자 1!!")
             self.simul_num = cf.imi1_simul_num
             # JackBot1
@@ -195,7 +198,6 @@ class open_api(QAxWidget):
         self.jango_is_null = True
 
         self.py_gubun = False
-
 
     # 봇 데이터 베이스를 만드는 함수
     def create_database(self, cursor):
@@ -232,7 +234,7 @@ class open_api(QAxWidget):
             # database가 존재하지 않는다면 해당 데이터베이스를 만들어준다.
             if not self.is_database_exist(cursor):
                 self.create_database(cursor)
-            self.engine_JB = create_engine(
+            self.engine_jackbot = create_engine(
                 "mysql+mysqldb://" + cf.db_id + ":" + cf.db_passwd + "@" + cf.db_ip + ":" + cf.db_port + "/" + db_name,
                 encoding='utf-8'
             )
@@ -241,7 +243,7 @@ class open_api(QAxWidget):
         conn.commit()
         conn.close()
 
-        self.engine_craw = create_engine(
+        self.engine_min_craw = create_engine(
             "mysql+mysqldb://" + cf.db_id + ":" + cf.db_passwd + "@" + cf.db_ip + ":" + cf.db_port + "/min_craw",
             encoding='utf-8')
         self.engine_daily_craw = create_engine(
@@ -251,7 +253,7 @@ class open_api(QAxWidget):
             "mysql+mysqldb://" + cf.db_id + ":" + cf.db_passwd + "@" + cf.db_ip + ":" + cf.db_port + "/daily_buy_list",
             encoding='utf-8')
 
-        event.listen(self.engine_craw, 'before_execute', escape_percentage, retval=True)
+        event.listen(self.engine_min_craw, 'before_execute', escape_percentage, retval=True)
         event.listen(self.engine_daily_craw, 'before_execute', escape_percentage, retval=True)
         event.listen(self.engine_daily_buy_list, 'before_execute', escape_percentage, retval=True)
 
@@ -475,7 +477,7 @@ class open_api(QAxWidget):
         df_setting_data.loc[0, 'min_crawler'] = str(0)
         df_setting_data.loc[0, 'daily_buy_list'] = str(0)
 
-        df_setting_data.to_sql('setting_data', self.engine_JB, if_exists='replace')
+        df_setting_data.to_sql('setting_data', self.engine_jackbot, if_exists='replace')
 
     # all_item_db에 추가하는 함수
     def db_to_all_item(self, order_num, code, chegyul_check, purchase_price, rate):
@@ -540,7 +542,7 @@ class open_api(QAxWidget):
         # 컬럼 중에 nan 값이 있는 경우 0으로 변경 -> 이렇게 안하면 아래 데이터베이스에 넣을 때
         # AttributeError: 'numpy.int64' object has no attribute 'translate' 에러 발생
         self.sf.df_all_item = self.sf.df_all_item.fillna(0)
-        self.sf.df_all_item.to_sql('all_item_db', self.engine_JB, if_exists='append', dtype={
+        self.sf.df_all_item.to_sql('all_item_db', self.engine_jackbot, if_exists='append', dtype={
             'code_name': Text,
             'rate': Float,
             'sell_rate': Float,
@@ -585,7 +587,7 @@ class open_api(QAxWidget):
         logger.debug("get_count_possesed_item!!!")
 
         sql = "select count(*) from possessed_item"
-        rows = self.engine_JB.execute(sql).fetchall()
+        rows = self.engine_jackbot.execute(sql).fetchall()
         # 데이타 Fetch
         # rows 는 list안에 튜플이 있는 [()] 형태로 받아온다
 
@@ -594,7 +596,7 @@ class open_api(QAxWidget):
     def setting_data_possesed_item(self):
 
         sql = "UPDATE setting_data SET possessed_item='%s' limit 1"
-        self.engine_JB.execute(sql % (self.today))
+        self.engine_jackbot.execute(sql % (self.today))
         # self.jackbot_db_con.commit()
 
     # 실제로 키움증권에서 보유한 종목들의 리스트를 가져오는 함수
@@ -630,7 +632,7 @@ class open_api(QAxWidget):
             # 총 매수 금액
             possesed_item.loc[i, 'item_total_purchase'] = int(row[6])
         # possessed_item 테이블에 현재 보유 종목을 넣는다.
-        possesed_item.to_sql('possessed_item', self.engine_JB, if_exists='replace')
+        possesed_item.to_sql('possessed_item', self.engine_jackbot, if_exists='replace')
         self.chegyul_sync()
 
     # get_total_data_min : 특정 종목의 틱 (1분별) 데이터 조회 함수
@@ -732,7 +734,7 @@ class open_api(QAxWidget):
     def is_min_craw_table_exist(self, code_name):
         # #jackbot("******************************** is_craw_table_exist !!")
         sql = "select 1 from information_schema.tables where table_schema ='min_craw' and table_name = '{}'"
-        rows = self.engine_craw.execute(sql.format(code_name)).fetchall()
+        rows = self.engine_min_craw.execute(sql.format(code_name)).fetchall()
         if rows:
             return True
         else:
@@ -742,7 +744,7 @@ class open_api(QAxWidget):
     # min_craw 테이블에서 마지막 콜렉팅한 row의 sum_volume을 가져오는 함수
     def get_craw_db_last_min_sum_volume(self, code_name):
         sql = "SELECT sum_volume from `" + code_name + "` order by date desc limit 1"
-        rows = self.engine_craw.execute(sql).fetchall()
+        rows = self.engine_min_craw.execute(sql).fetchall()
         if len(rows):
             return rows[0][0]
         # 신생
@@ -752,7 +754,7 @@ class open_api(QAxWidget):
     # min_craw db 특정 종목의 테이블에서 마지막으로 콜렉팅한 date를 가져오는 함수
     def get_craw_db_last_min(self, code_name):
         sql = "SELECT date from `" + code_name + "` order by date desc limit 1"
-        rows = self.engine_craw.execute(sql).fetchall()
+        rows = self.engine_min_craw.execute(sql).fetchall()
         if len(rows):
             return rows[0][0]
         # 신생
@@ -978,33 +980,33 @@ class open_api(QAxWidget):
 
         sql = "UPDATE all_item_db SET chegyul_check='%s' WHERE code='%s' and sell_date = '%s' ORDER BY buy_date desc LIMIT 1"
 
-        self.engine_JB.execute(sql % (0, code, 0))
+        self.engine_jackbot.execute(sql % (0, code, 0))
 
         # 중복적으로 possessed_item 테이블에 반영되는 이슈가 있어서 일단 possesed_item 테이블에서 해당 종목을 지운다.
         # 어차피 다시 possessed_item은 업데이트가 된다.
         sql = "delete from possessed_item where code ='%s'"
-        self.engine_JB.execute(sql % (code,))
+        self.engine_jackbot.execute(sql % (code,))
 
     # 매도 했는데 완벽히 매도 못한 경우
     def sell_chegyul_fail_check(self, code):
         logger.debug("sell_chegyul_fail_check 함수에 들어왔습니다!")
         logger.debug(code + " check!")
         sql = "UPDATE all_item_db SET chegyul_check='%s' WHERE code='%s' and sell_date = '%s' ORDER BY buy_date desc LIMIT 1"
-        self.engine_JB.execute(sql % (1, code, 0))
+        self.engine_jackbot.execute(sql % (1, code, 0))
 
     # 잔액이 생겨서 다시 매수 할 수 있는 상황인 경우 setting_data의 today_buy_stop 옵션을 0으로 변경
     def buy_check_reset(self):
         logger.debug("buy_check_reset!!!")
 
         sql = "UPDATE setting_data SET today_buy_stop='%s' WHERE id='%s'"
-        self.engine_JB.execute(sql % (0, 1))
+        self.engine_jackbot.execute(sql % (0, 1))
 
     # 투자 가능한 잔액이 부족한 경우이거나, 매수할 종목이 더이상 없는 경우
     # setting_data의 today_buy_stop 옵션을 1로 변경-> 더이상 매수 하지 않는다.
     def buy_check_stop(self):
         logger.debug("buy_check_stop!!!")
         sql = "UPDATE setting_data SET today_buy_stop='%s' limit 1"
-        self.engine_JB.execute(sql % (self.today))
+        self.engine_jackbot.execute(sql % (self.today))
 
     # 잔액 체크 함수
     def jango_check(self):
@@ -1032,7 +1034,7 @@ class open_api(QAxWidget):
     def buy_check(self):
         logger.debug("buy_check 함수에 들어왔습니다!")
         sql = "select today_buy_stop from setting_data limit 1"
-        rows = self.engine_JB.execute(sql).fetchall()[0][0]
+        rows = self.engine_jackbot.execute(sql).fetchall()[0][0]
 
         if rows != self.today:
             logger.debug("GoGo Buying!!!!!!")
@@ -1140,7 +1142,7 @@ class open_api(QAxWidget):
                 self.get_today_buy_list_close = close
                 # 매수 하기 전에 해당 종목의 check_item을 1로 변경. 즉, 이미 매수 했으니까 다시 매수 하지말라고 체크 하는 로직
                 sql = "UPDATE realtime_daily_buy_list SET check_item='%s' WHERE code='%s'"
-                self.engine_JB.execute(sql % (1, self.get_today_buy_list_code))
+                self.engine_jackbot.execute(sql % (1, self.get_today_buy_list_code))
                 self.trade()
 
         # 모든 매수를 마쳤으면 더이상 매수 하지 않도록 설정하는 함수
@@ -1164,7 +1166,7 @@ class open_api(QAxWidget):
     def final_chegyul_check(self):
         sql = "select code from all_item_db a where (a.sell_date = '%s' or a.sell_date ='%s') and a.code not in ( select code from possessed_item) and a.chegyul_check != '%s'"
 
-        rows = self.engine_JB.execute(sql % (0, "", 1)).fetchall()
+        rows = self.engine_jackbot.execute(sql % (0, "", 1)).fetchall()
         logger.debug("possess_item 테이블에는 없는데 all_item_db에 sell_date가 없는 리스트 처리!!!")
         logger.debug(rows)
         num = len(rows)
@@ -1175,13 +1177,13 @@ class open_api(QAxWidget):
 
         # 오늘 리스트 다 뽑았으면 today를 setting_data에 체크
         sql = "UPDATE setting_data SET final_chegyul_check='%s' limit 1"
-        self.engine_JB.execute(sql % (self.today))
+        self.engine_jackbot.execute(sql % (self.today))
 
     # all_item_db의 rate를 업데이트 한다.
     def rate_check(self):
         logger.debug("rate_check!!!")
         sql = "select code ,holding_amount, puchase_price, present_price, valuation_profit, rate,item_total_purchase from possessed_item group by code"
-        rows = self.engine_JB.execute(sql).fetchall()
+        rows = self.engine_jackbot.execute(sql).fetchall()
 
         logger.debug("rate 업데이트 !!!")
         logger.debug(rows)
@@ -1199,7 +1201,7 @@ class open_api(QAxWidget):
             item_total_purchase = rows[k][6]
             # print("rate!!", rate)
             sql = "update all_item_db set holding_amount ='%s', purchase_price ='%s', present_price='%s',valuation_profit='%s',rate='%s',item_total_purchase='%s' where code='%s' and sell_date = '%s'"
-            self.engine_JB.execute(sql % (holding_amount,purchase_price,present_price,valuation_profit,float(rate),item_total_purchase, code, 0))
+            self.engine_jackbot.execute(sql % (holding_amount,purchase_price,present_price,valuation_profit,float(rate),item_total_purchase, code, 0))
 
     def chegyul_sync(self):
         # 먼저 possessd_item 테이블에는 있는데 all_item_db에 없는 종목들 추가해준다
@@ -1208,7 +1210,7 @@ class open_api(QAxWidget):
                                  where a.sell_date = '0' group by a.code)
             group by p.code"""
 
-        rows = self.engine_JB.execute(sql).fetchall()
+        rows = self.engine_jackbot.execute(sql).fetchall()
 
         logger.debug("possess_item 테이블에는 있는데 all_item_db에 없는 종목들 처리!!!")
         logger.debug(rows)
@@ -1243,7 +1245,7 @@ class open_api(QAxWidget):
     # 따라서 아래 체결 체크를 확인하는 함수가 필요로 하다.
     def chegyul_check(self):
         sql = "SELECT code FROM all_item_db where chegyul_check='1' and (sell_date = '0' or sell_date= '')"
-        rows = self.engine_JB.execute(sql).fetchall()
+        rows = self.engine_jackbot.execute(sql).fetchall()
 
         logger.debug("in chegyul_check!!!!! all_item_db에서 cheguyl_check가 1인 종목들(미체결상태) 확인!!!")
         logger.debug(rows)
@@ -1263,12 +1265,12 @@ class open_api(QAxWidget):
                          f"ORDER BY buy_date DESC LIMIT 1"
             if not self._data['주문번호']: # 과거에 거래한 경우 opt10076 조회 시 주문번호 등의 데이터가 존재하지 않음.
                 logger.debug(f"{r.code} 체결 완료 (과거 거래 한 경우)")
-                self.engine_JB.execute(update_sql)
+                self.engine_jackbot.execute(update_sql)
 
             elif self._data['미체결수량'] == 0:
                 logger.debug(f"{r.code} 체결 완료 (오늘 거래 한 경우)")
                 # 제일 최근 종목하나만 체결정보 업데이트하는거다
-                self.engine_JB.execute(update_sql)
+                self.engine_jackbot.execute(update_sql)
 
             else:
                 logger.debug(f"아직 매수 혹은 매도 중인 종목 !!!! 미체결 수량: {self._data['미체결수량']}")
@@ -1282,7 +1284,7 @@ class open_api(QAxWidget):
         # 무조건 튜플 형태로 실행해야한다. 따라서 인자 하나를 보내더라도 ( , ) 안에 하나 넣어서 보낸다.
         # self.engine_JB.execute(sql % (self.today,))
 
-        rows = self.engine_JB.execute(sql % (code, 0)).fetchall()
+        rows = self.engine_jackbot.execute(sql % (code, 0)).fetchall()
 
         if rows[0][0] == 1:
             return True
@@ -1294,7 +1296,7 @@ class open_api(QAxWidget):
         logger.debug("sell_final_check")
 
         # sell_price가 없어서 에러가났음
-        get_list = self.engine_JB.execute(f"""
+        get_list = self.engine_jackbot.execute(f"""
             SELECT valuation_profit, rate, item_total_purchase, present_price 
             FROM possessed_item WHERE code='{code}' LIMIT 1
         """).fetchall()
@@ -1305,10 +1307,10 @@ class open_api(QAxWidget):
                  sell_date = '{self.today_detail}', valuation_profit = {item.valuation_profit},
                  sell_rate = {item.rate}, sell_price = {item.present_price}
                 WHERE code = '{code}' and sell_date = '0' ORDER BY buy_date desc LIMIT 1"""
-            self.engine_JB.execute(sql)
+            self.engine_jackbot.execute(sql)
 
             # 팔았으면 즉각 possess db에서 삭제한다. 왜냐하면 checgyul_check 들어가기 직전에 possess_db를 최신화 하긴 하지만 possess db 최신화와 chegyul_check 사이에 매도가 이뤄져서 receive로 가게 되면 sell_date를 찍어버리기 때문에 checgyul_check 입장에서는 possess에는 존재하고 all_db는 sell_date찍혀있다고 판단해서 새롭게 all_db추가해버린다.
-            self.engine_JB.execute(f"DELETE FROM possessed_item WHERE code = '{code}'")
+            self.engine_jackbot.execute(f"DELETE FROM possessed_item WHERE code = '{code}'")
 
             logger.debug(f"delete {code}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         else:
@@ -1321,7 +1323,7 @@ class open_api(QAxWidget):
         sql = "delete from all_item_db where code = '%s'"
         # self.engine_JB.execute(sql % (code,))
         # self.jackbot_db_con.commit()
-        self.engine_JB.execute(sql % (code))
+        self.engine_jackbot.execute(sql % (code))
 
         logger.debug("delete_all_item!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         logger.debug(code)
@@ -1331,7 +1333,7 @@ class open_api(QAxWidget):
         logger.debug(f"sell_final_check2 possessed_item에는 없는데 all_item_db에 sell_date 추가 안된 종목 처리 !!! {code}")
         sql = "UPDATE all_item_db SET chegyul_check='%s', sell_date ='%s' WHERE code='%s' and sell_date ='%s' ORDER BY buy_date desc LIMIT 1"
 
-        self.engine_JB.execute(sql % (0, self.today_detail, code, 0))
+        self.engine_jackbot.execute(sql % (0, self.today_detail, code, 0))
 
     # all_item_db 보유한 종목이 있는지 확인 (sell_date가 0이거나 비어있으면 아직 매도하지 않고 보유한 종목이다)
     # 보유한 경우 true 반환, 보유 하지 않았으면 False 반환
@@ -1339,7 +1341,7 @@ class open_api(QAxWidget):
         logger.debug(f"is_all_item_db_check code!! {code}")
         sql = "select code from all_item_db where code='%s' and (sell_date ='%s' or sell_date='%s') ORDER BY buy_date desc LIMIT 1"
 
-        rows = self.engine_JB.execute(sql % (code, 0, "")).fetchall()
+        rows = self.engine_jackbot.execute(sql % (code, 0, "")).fetchall()
         if len(rows) != 0:
             return True
         else:
@@ -1770,7 +1772,7 @@ class open_api(QAxWidget):
                 cursor.execute(create_db_sql)
                 logger.debug(f'{check_name} 생성 완료')
 
-        if has_created and self.engine_JB.has_table('setting_data'):
-            self.engine_JB.execute("""
+        if has_created and self.engine_jackbot.has_table('setting_data'):
+            self.engine_jackbot.execute("""
                 UPDATE setting_data SET code_update = '0';
             """)

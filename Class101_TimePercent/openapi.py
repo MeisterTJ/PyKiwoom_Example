@@ -22,6 +22,7 @@ logger.addHandler(streamHandler)
 TR_REQ_TIME_INTERVAL = 0.2
 
 
+# 이 클래스는 단일 테스트로만 쓰이고 bot에서는 돌리지 않는다.
 class Openapi(QAxWidget):
     def __init__(self):
         print("openapi __name__:", __name__)
