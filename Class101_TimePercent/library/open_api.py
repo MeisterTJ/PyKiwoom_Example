@@ -597,7 +597,6 @@ class open_api(QAxWidget):
         return rows[0][0]
 
     def setting_data_possesed_item(self):
-
         sql = "UPDATE setting_data SET possessed_item='%s' limit 1"
         self.engine_jackbot.execute(sql % (self.today))
         # self.jackbot_db_con.commit()
