@@ -108,7 +108,7 @@ ex)
 
             ######### 알고리즘 선택 #############
             # 매수 리스트 설정 알고리즘 번호
-            self.db_to_realtime_daily_buy_list_num = 1
+            self.db_to_realtime_daily_buy_algo_num = 1
 
             # 매도 리스트 설정 알고리즘 번호
             self.sell_list_num = 1
@@ -137,12 +137,12 @@ ex)
             self.invest_min_limit_rate = -100
 
             if self.simul_num == 4:
-                self.db_to_realtime_daily_buy_list_num = 4
+                self.db_to_realtime_daily_buy_algo_num = 4
                 self.interval_month = 3
                 self.invest_unit = 50000
 
             elif self.simul_num == 5:
-                self.db_to_realtime_daily_buy_list_num = 5
+                self.db_to_realtime_daily_buy_algo_num = 5
                 self.total_transaction_price = 10000000000
                 self.interval_month = 3
                 self.vol_mul = 3
@@ -151,12 +151,12 @@ ex)
                 # self.only_nine_buy = False
 
             elif self.simul_num == 6:
-                self.db_to_realtime_daily_buy_list_num = 6
+                self.db_to_realtime_daily_buy_algo_num = 6
 
             # 절대 모멘텀 / 상대 모멘텀
             elif self.simul_num in (7, 8, 9, 10):
                 # 매수 리스트 설정 알고리즘 번호(절대모멘텀 code ver)
-                self.db_to_realtime_daily_buy_list_num = 7
+                self.db_to_realtime_daily_buy_algo_num = 7
                 # 매도 리스트 설정 알고리즘 번호(절대모멘텀 code ver)
 
                 self.sell_list_num = 4
@@ -170,13 +170,13 @@ ex)
 
                 if self.simul_num == 8:
                     # 매수 리스트 설정 알고리즘 번호 (절대모멘텀 query ver)
-                    self.db_to_realtime_daily_buy_list_num = 8
+                    self.db_to_realtime_daily_buy_algo_num = 8
                     # 매도 리스트 설정 알고리즘 번호 (절대모멘텀 query ver)
                     self.sell_list_num = 5
 
                 elif self.simul_num == 9:
                     # 매수 리스트 설정 알고리즘 번호 (절대모멘텀 query ver)
-                    self.db_to_realtime_daily_buy_list_num = 8
+                    self.db_to_realtime_daily_buy_algo_num = 8
                     # 매도 리스트 설정 알고리즘 번호 (절대모멘텀 query ver + losscut point 추가)
                     self.sell_list_num = 6
                     # 손절 수익률 기준치
@@ -184,7 +184,7 @@ ex)
 
                 elif self.simul_num == 10:
                     # 매수 리스트 설정 알고리즘 번호 (상대모멘텀 query ver)
-                    self.db_to_realtime_daily_buy_list_num = 9
+                    self.db_to_realtime_daily_buy_algo_num = 9
                     # 매도 리스트 설정 알고리즘 번호 (절대모멘텀 query ver + losscut point 추가)
                     self.sell_list_num = 5
 
@@ -216,10 +216,10 @@ ex)
                     self.rarry_k = 0.5
 
             elif self.simul_num == 16:
-                self.db_to_realtime_daily_buy_list_num = 11
+                self.db_to_realtime_daily_buy_algo_num = 11
 
 [db_to_realtime_daily_buy_list 함수]
-     elif self.db_to_realtime_daily_buy_list_num == 11:
+     elif self.db_to_realtime_daily_buy_algo_num == 11:
             sql = f"SELECT * from `{date_rows_yesterday}` YES_DAY " \
                   "WHERE yes_clo20 > yes_clo5 and clo5 > clo20 " \
                     "AND EXISTS (SELECT null FROM stock_etf ETF WHERE YES_DAY.code=ETF.code) " \

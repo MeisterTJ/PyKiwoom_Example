@@ -102,7 +102,7 @@ and a.close < 50000;
 
 
 # 매수 알고리즘
-#         elif self.db_to_realtime_daily_buy_list_num == 4:
+#         elif self.db_to_realtime_daily_buy_algo_num == 4:
 #             sql = "select * from `" + date_rows_yesterday + "` a " \
 #                     "where yes_clo20 > yes_clo5 and clo5 > clo20 " \
 #                     "and NOT exists (select null from stock_konex b where a.code=b.code)" \
@@ -126,7 +126,7 @@ and a.close < 50000;
 #
 #             ######### 알고리즘 선택 #############
 #             # 매수 리스트 설정 알고리즘 번호
-#             self.db_to_realtime_daily_buy_list_num = 1
+#             self.db_to_realtime_daily_buy_algo_num = 1
 #
 #             # 매도 리스트 설정 알고리즘 번호
 #             self.sell_list_num = 1
@@ -153,6 +153,6 @@ and a.close < 50000;
 #             self.invest_min_limit_rate = 0.98
 #
 #             if self.simul_num == 4:
-#                 self.db_to_realtime_daily_buy_list_num = 4
+#                 self.db_to_realtime_daily_buy_algo_num = 4
 #                 self.interval_month = 3
 #                 self.invest_unit = 50000

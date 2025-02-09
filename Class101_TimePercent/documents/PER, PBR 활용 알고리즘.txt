@@ -210,7 +210,7 @@ LIMIT 100;
 
 
 # 매수함수
-#         elif self.db_to_realtime_daily_buy_list_num == 13:
+#         elif self.db_to_realtime_daily_buy_algo_num == 13:
 #             sql = f'''
 #                 SELECT DAY.*
 #                 FROM `{date_rows_yesterday}` DAY, stock_finance FIN, stock_info INF
@@ -237,4 +237,4 @@ LIMIT 100;
 #             elif self.simul_num == 18:
 #                 # stock_finance에 데이터가 쌓인 시점의 다음날로 self.simul_start_date 를 설정
 #                 self.simul_start_date = "20201016"
-#                 self.db_to_realtime_daily_buy_list_num = 13
+#                 self.db_to_realtime_daily_buy_algo_num = 13

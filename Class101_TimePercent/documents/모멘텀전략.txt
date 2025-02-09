@@ -105,7 +105,7 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
           min_craw db 에서 가장 최근 가져온 1년 전 날짜를 확인 후 self.simul_start_date 에 넣어주는게 좋습니다.
           분 별 데이터가 없는 과거를 시뮬레이션 할 경우 해당 기간은 매수를 하지 않습니다.
 
-# 어떤 매수 알고리즘을 사용 할 지 :  self.db_to_realtime_daily_buy_list_num
+# 어떤 매수 알고리즘을 사용 할 지 :  self.db_to_realtime_daily_buy_algo_num
 # 어떤 매도 알고리즘을 사용 할 지 : self.sell_list_num
 # 초기 투자금은 얼마로 할 지 : self.start_invest_price
 # 한 종목당 최대 얼마나 매수 할 지 : self.invest_unit
@@ -132,7 +132,7 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
         #
         #     ######### 알고리즘 선택 #############
         #     # 매수 리스트 설정 알고리즘 번호
-        #     self.db_to_realtime_daily_buy_list_num = 1
+        #     self.db_to_realtime_daily_buy_algo_num = 1
         #
         #     # 매도 리스트 설정 알고리즘 번호
         #     self.sell_list_num = 1
@@ -159,12 +159,12 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
         #     self.invest_min_limit_rate = 0.98
         #
         #     if self.simul_num == 4:
-        #         self.db_to_realtime_daily_buy_list_num = 4
+        #         self.db_to_realtime_daily_buy_algo_num = 4
         #         self.interval_month = 3
         #         self.invest_unit = 50000
         #
         #     elif self.simul_num == 5:
-        #         self.db_to_realtime_daily_buy_list_num = 5
+        #         self.db_to_realtime_daily_buy_algo_num = 5
         #         self.total_transaction_price = 10000000000
         #         self.interval_month = 3
         #         self.vol_mul = 3
@@ -173,12 +173,12 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
         #         # self.only_nine_buy = False
         #
         #     elif self.simul_num == 6:
-        #         self.db_to_realtime_daily_buy_list_num = 6
+        #         self.db_to_realtime_daily_buy_algo_num = 6
         #
         # # 절대 모멘텀 / 상대 모멘텀
         #     elif self.simul_num in (7,8,9,10) :
         #         # 매수 리스트 설정 알고리즘 번호(절대모멘텀 code ver)
-        #         self.db_to_realtime_daily_buy_list_num = 7
+        #         self.db_to_realtime_daily_buy_algo_num = 7
         #         # 매도 리스트 설정 알고리즘 번호(절대모멘텀 code ver)
         #         self.sell_list_num = 4
         #         # 시뮬레이팅 시작 일자(분 별 시뮬레이션의 경우 최근 1년 치 데이터만 있기 때문에 start_date 조정 필요)
@@ -193,13 +193,13 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
         #
         #         if self.simul_num == 8:
         #             # 매수 리스트 설정 알고리즘 번호 (절대모멘텀 query ver)
-        #             self.db_to_realtime_daily_buy_list_num = 8
+        #             self.db_to_realtime_daily_buy_algo_num = 8
         #             # 매도 리스트 설정 알고리즘 번호 (절대모멘텀 query ver)
         #             self.sell_list_num = 5
         #
         #         elif self.simul_num == 9 :
         #             # 매수 리스트 설정 알고리즘 번호 (절대모멘텀 query ver)
-        #             self.db_to_realtime_daily_buy_list_num = 8
+        #             self.db_to_realtime_daily_buy_algo_num = 8
         #             # 매도 리스트 설정 알고리즘 번호 (절대모멘텀 query ver + losscut point 추가)
         #             self.sell_list_num = 6
         #             # 손절 수익률 기준치
@@ -207,14 +207,14 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
         #
         #         elif self.simul_num == 10:
         #             # 매수 리스트 설정 알고리즘 번호 (상대모멘텀 query ver)
-        #             self.db_to_realtime_daily_buy_list_num = 9
+        #             self.db_to_realtime_daily_buy_algo_num = 9
         #             # 매도 리스트 설정 알고리즘 번호 (절대모멘텀 query ver + losscut point 추가)
         #             self.sell_list_num = 5
 
 
 # 매수함수
        # # 절대 모멘텀 전략 : 특정일 전의 종가 보다 n% 이상 상승한 종목 매수 (code version)
-        # elif self.db_to_realtime_daily_buy_list_num == 7:
+        # elif self.db_to_realtime_daily_buy_algo_num == 7:
         #     # 아래에서 필터링 된 매수종목을 append 해주기 위해 비어있는 리스트를 만들어준다.
         #     realtime_daily_buy_list = []
         #     if i < self.day_before + 1:
@@ -244,7 +244,7 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
         #
         #
         # # 절대 모멘텀 전략 : 특정일 전의 종가 보다 n% 이상 상승한 종목 매수 (query vesrion)
-        # elif self.db_to_realtime_daily_buy_list_num == 8:
+        # elif self.db_to_realtime_daily_buy_algo_num == 8:
         #     if i < self.day_before + 1:
         #         realtime_daily_buy_list = []
         #         pass
@@ -260,7 +260,7 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
         #         realtime_daily_buy_list = self.engine_daily_buy_list.execute(sql % (self.diff_point, self.invest_unit)).fetchall()
         #
         # # 상대 모멘텀 전략 : 특정일 전의 종가 보다 n% 이상 상승한 종목 중 가장 많이 상승한 종목 순으로 매수 (내림차순) (query version)
-        # elif self.db_to_realtime_daily_buy_list_num == 9:
+        # elif self.db_to_realtime_daily_buy_algo_num == 9:
         #     if i < self.day_before + 1:
         #         realtime_daily_buy_list = []
         #         pass

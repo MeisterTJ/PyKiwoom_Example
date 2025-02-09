@@ -130,7 +130,7 @@ AND info.remarks NOT LIKE "%거래정지%";
 
 
 # 매수 함수 구현
-#         elif self.db_to_realtime_daily_buy_list_num == 12:
+#         elif self.db_to_realtime_daily_buy_algo_num == 12:
 #             sql = f'''
 #                 SELECT day.* FROM `{date_rows_yesterday}` day, stock_info info
 #                 WHERE day.code = info.code

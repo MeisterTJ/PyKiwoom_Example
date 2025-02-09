@@ -624,7 +624,7 @@ class simulator_func_mysql:
 
         ######################################################################################################################################################################################
         else:
-            print(f"{self.simul_num}번 알고리즘에 대한 self.db_to_realtime_daily_buy_list_num 설정이 비었습니다. variable_setting 함수에서 self.db_to_realtime_daily_buy_list_num 을 확인해주세요.")
+            print(f"{self.simul_num}번 알고리즘에 대한 self.db_to_realtime_daily_buy_algo_num 설정이 비었습니다. variable_setting 함수에서 self.db_to_realtime_daily_buy_algo_num 을 확인해주세요.")
             sys.exit(1)
 
 
