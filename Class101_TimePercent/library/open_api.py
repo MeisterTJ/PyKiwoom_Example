@@ -1733,7 +1733,7 @@ class open_api(QAxWidget):
         except Exception as e:
             logger.critical(e)
 
-    #   일자별 종목별 실현손익
+    # 일자별 종목별 실현손익
     def reset_opt10073_output(self):
         logger.debug("reset_opt10073_output!!!")
         try:
@@ -1741,7 +1741,7 @@ class open_api(QAxWidget):
         except Exception as e:
             logger.critical(e)
 
-    #   미체결 정보
+    # 미체결 정보
     def _opt10076(self, rqname, trcode):
         logger.debug("func in !!! _opt10076!!!!!!!!! ")
         output_keys = ['주문번호', '종목명', '주문구분', '주문가격', '주문수량', '체결가', '체결량', '미체결수량',
