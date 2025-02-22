@@ -97,6 +97,7 @@ class simulator_func_mysql:
         # 분별 시뮬레이션을 사용하고 싶을 경우 아래 옵션을 True로 변경하여 사용
         self.use_min = False
         # 아침 9시에만 매수를 하고 싶은 경우 True, 9시가 아니어도 매수를 하고 싶은 경우 False(분별 시뮬레이션 적용 가능 / 일별 시뮬레이션은 9시에만 매수, 매도)
+        # 일별일 경우에는 중간에 매도를 통해 돈이 생길 경우 9시가 아니어도 매수가 가능하도록 한다.
         self.only_nine_buy = True
         # self.buy_stop옵션은 수정 필요가 없음. self.only_nine_buy 옵션을 True로 하게 되면 시뮬레이터가 9시에 매수 후에 self.buy_stop을 true로 변경해서 당일에는 더이상 매수하지 않도록 설정함
         self.buy_stop = False
@@ -544,7 +545,7 @@ class simulator_func_mysql:
             # 어제 거래 대금
             yes_total_tr_price = yes_close * yes_volume
             # 현재 거래 대금
-            current_total_tr_price = current_price * current_sum_volume
+            current_total_tr_price = current_price * current_sum_volume 
             # 어제 종가 보다 현재가가 증가했고, 거래 대금이 어제 거래대금에 비해서 x배 올라갔을 때 매수
             if current_price > yes_close and current_total_tr_price > yes_total_tr_price * self.volume_up:
                 return True
@@ -1440,6 +1441,7 @@ class simulator_func_mysql:
         print('jango_data 최종 정산 완료')
 
     # 분 데이터를 가져오는 함수
+    # 9시부터 15시 30분까지의 분별 시간을 가져온다.
     def get_date_min_for_simul(self, simul_start_date):
         # 촬영 후 업데이트 되었습니다
         dt_format = '%Y%m%d%H%M'
@@ -1452,6 +1454,7 @@ class simulator_func_mysql:
             simul_time += min_delta
 
         self.min_date_rows = times
+        
     # 분별 시뮬레이팅 함수
     # 새로운 종목 매수 및 보유한 종목의 데이터를 업데이트 하는 함수, 매도 함수도 포함
     def trading_by_min(self, date_rows_today, date_rows_yesterday, i):
@@ -1471,6 +1474,7 @@ class simulator_func_mysql:
                 # all_item_db가 존재하고 현재 보유 중인 종목이 있는 경우
                 if self.is_simul_table_exist(self.db_name,"all_item_db") and len(self.get_data_from_possessed_item()) != 0:
                     self.print_info(min)
+                    # 보유 중인 종목들의 주가를 분별로 업데이트 한다. 
                     self.update_all_db_by_min(min)
                     self.update_all_db_etc()
                     # 매도 함수

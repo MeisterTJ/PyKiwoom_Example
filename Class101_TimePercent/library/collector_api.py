@@ -2,18 +2,17 @@ from collections import OrderedDict
 
 from sqlalchemy import Integer, Text, String
 
-ver = "#version 1.5.0"
-print(f"collector_api Version: {ver}")
-
 import numpy
-import pathlib
-from .open_api import *
+from .open_api import open_api
 import os
 import time
 from PyQt5.QtWidgets import *
-from .daily_buy_list import *
+from .daily_buy_list import daily_crawler, daily_buy_list
 from pandas import DataFrame
 # from kind_crawling import *
+
+ver = "#version 1.5.0"
+print(f"collector_api Version: {ver}")
 
 MARKET_KOSPI = 0
 MARKET_KOSDAQ = 10
@@ -154,7 +153,7 @@ class collector_api():
         sql = "UPDATE setting_data SET daily_buy_list='%s' limit 1"
         self.engine_jackbot.execute(sql % (self.open_api.today))
 
-    # min_craw데이터베이스를 구축
+    # min_craw 데이터베이스를 구축
     def db_to_min_craw(self):
         logger.debug("db_to_min_craw!!!!!!")
         sql = "select code,code_name, check_min_crawler from stock_item_all"
@@ -576,9 +575,9 @@ class collector_api():
                     else:
                         diff = False  # daily_buy_list를 해당 날짜까지 아직 생성하지 못한 경우, 어차피 날짜테이블은 없으면 다시 생성한다. 비교대상이 없으므로 False
                 else:
-                    diff = True # 분할 재상장 하는 경우 (ex. F&F) daily_buy_list에 분할재상장 이전 데이터가 있을 수 있다. -> 삭제 후 다시 받도록
+                    diff = True  # 분할 재상장 하는 경우 (ex. F&F) daily_buy_list에 분할재상장 이전 데이터가 있을 수 있다. -> 삭제 후 다시 받도록
             else:
-                diff = False # daily_buy_list에 아무런 날짜 테이블이 없는 경우 (처음 콜렉팅을 하는 경우)
+                diff = False  # daily_buy_list에 아무런 날짜 테이블이 없는 경우 (처음 콜렉팅을 하는 경우)
         else:
             self.engine_jackbot.execute(check_daily_crawler_sql.format(code))
             deleted = True

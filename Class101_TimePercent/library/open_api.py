@@ -601,7 +601,7 @@ class open_api(QAxWidget):
         self.engine_jackbot.execute(sql % (self.today))
         # self.jackbot_db_con.commit()
 
-    # 실제로 키움증권에서 보유한 종목들의 리스트를 가져오는 함수
+    # 실제로 키움증권에서 보유한 종목들의 리스트를 가져와서 db에 동기화를 한다. 
     def db_to_possesed_item(self):
         logger.debug("db_to_possesed_item 함수에 들어왔습니다!")
         item_count = len(self.opw00018_output['multi'])
@@ -1035,12 +1035,15 @@ class open_api(QAxWidget):
     # setting_data 테이블의 today_buy_stop에 날짜가 찍혀 있으면 매수 중지, 0이면 매수 진행 가능
     def buy_check(self):
         logger.debug("buy_check 함수에 들어왔습니다!")
+        # setting_data에서 today_buy_stop 컬럼을 가져온다.
         sql = "select today_buy_stop from setting_data limit 1"
         rows = self.engine_jackbot.execute(sql).fetchall()[0][0]
 
         if rows != self.today:
             logger.debug("GoGo Buying!!!!!!")
             return True
+        # today_buy_stop에 날짜가 찍혀있으면 매수를 하지 않을 것이다.
+        # 어떤 특정상황 (폭락장이든 아니면 로직 정비가 필요하든 간에) 에서 매수를 중지하고 싶을 때 사용.
         else:
             logger.debug("Stop Buying!!!!!!")
             return False
@@ -1048,6 +1051,7 @@ class open_api(QAxWidget):
     # 몇 개의 주를 살지 계산 하는 함수
     def buy_num_count(self, invest_unit, present_price):
         logger.debug("buy_num_count 함수에 들어왔습니다!")
+        # 종목 당 최대 매수 가능 금액 / 매수 가격
         return int(invest_unit / present_price)
 
     # 매수 함수
@@ -1055,20 +1059,21 @@ class open_api(QAxWidget):
         logger.debug("trade 함수에 들어왔다!")
         logger.debug("매수 대상 종목 코드! " + self.get_today_buy_list_code)
 
-        # 실시간 현재가(close) 가져오는 함수
-        # close는 종가 이지만, 현재 시점의 종가를 가져오기 때문에 현재가를 가져온다.
+        # 실시간 현재가(close) 가져오는 함수 (api 호출)
+        # close는 종가 이지만, 현재 시점의 종가를 가져오기 때문에 현재가를 가져온다. (오늘 날짜의 현재가라고 볼 수 있다.)
         current_price = self.get_one_day_option_data(self.get_today_buy_list_code, self.today, 'close')
 
         if current_price == False:
             logger.debug(self.get_today_buy_list_code + " 의 현재가가 비어있다 !!!")
             return False
 
-        # 매수 가격 최저 범위
+        # 매수 가격 최저 범위 : 어제 종가보다 self.sf.invest_min_limit_rate 보다 높아야 살 것이다.
         min_buy_limit = int(self.get_today_buy_list_close) * self.sf.invest_min_limit_rate
-        # 매수 가격 최고 범위
+        # 매수 가격 최고 범위 : 어제 종가보다 self.sf.invest_limit_rate 보다 낮아야 살 것이다.
         max_buy_limit = int(self.get_today_buy_list_close) * self.sf.invest_limit_rate
-        # 현재가가 매수 가격 최저 범위와 매수 가격 최고 범위 안에 들어와 있다면 매수 한다.
+        # 현재가가 매수 가격 최저 범위와 매수 가격 최고 범위 안에 들어와 있다면 매수 한다. -> 뭐 어제 종가에 비해 가격이 튀면 사지 않겠다는 것 같은데..
         if min_buy_limit < current_price < max_buy_limit:
+            # 한 종목당 최대 매수 금액을 설정해 놨는데 그걸 기반으로 몇 주를 살 것인지 계산한다. 
             buy_num = self.buy_num_count(self.invest_unit, int(current_price))
             logger.debug(
                 "매수!!!!+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- code :%s, 목표가: %s, 현재가: %s, 매수량: %s, min_buy_limit: %s, max_buy_limit: %s , invest_limit_rate: %s,예수금: %s , today : %s, today_min : %s, date_rows_yesterday : %s, invest_unit : %s, real_invest_unit : %s +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-",
@@ -1088,14 +1093,15 @@ class open_api(QAxWidget):
                 # setting_data에 today_buy_stop을 1 로 설정
                 self.buy_check_stop()
         else:
+            # 조건에 맞지 않으니 사지 않는다는 메시지를 출력한다. 
             logger.debug(
                 "invest_limit_rate 만큼 급등 or invest_min_limit_rate 만큼 급락 해서 매수 안함 !!! code :%s, 목표가: %s , 현재가: %s, invest_limit_rate: %s , invest_min_limit_rate : %s, today : %s, today_min : %s, date_rows_yesterday : %s",
                 self.get_today_buy_list_code, self.get_today_buy_list_close, current_price, self.sf.invest_limit_rate,
                 self.sf.invest_min_limit_rate, self.today, self.today_detail, self.date_rows_yesterday)
 
-    # 오늘 매수 할 종목들을 가져오는 함수
-    def get_today_buy_list(self):
-        logger.debug("get_today_buy_list 함수에 들어왔습니다!")
+    # 오늘 매수 할 종목들을 가져와서 매수를 하는 함수.
+    def get_today_buy_list_and_trade(self):
+        logger.debug("get_today_buy_list_and_trade 함수에 들어왔습니다!")
 
         logger.debug("self.today : %s , self.date_rows_yesterday : %s !", self.today, self.date_rows_yesterday)
 
@@ -1246,6 +1252,7 @@ class open_api(QAxWidget):
     # why ? 매수 한 뒤에 all_item_db에 추가하기 전에 봇이 꺼지는 경우!
     # 따라서 아래 체결 체크를 확인하는 함수가 필요로 하다.
     def chegyul_check(self):
+        # chegyul_check 가 1인 종목들(미체결상태) 확인.
         sql = "SELECT code FROM all_item_db where chegyul_check='1' and (sell_date = '0' or sell_date= '')"
         rows = self.engine_jackbot.execute(sql).fetchall()
 
@@ -1261,6 +1268,7 @@ class open_api(QAxWidget):
             # 	조회구분 = 0:전체, 1:종목
             self.set_input_value("조회구분", 1)
             self.set_input_value("계좌번호", self.account_number)
+            # 체결 내역 조회
             self.comm_rq_data("opt10076_req", "opt10076", 0, "0350")
 
             update_sql = f"UPDATE all_item_db SET chegyul_check='0' WHERE code='{r.code}' and sell_date = '0'" \

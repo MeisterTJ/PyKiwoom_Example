@@ -1,8 +1,11 @@
+from library.open_api import open_api, logger
+from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtCore import QTime
+import sys
+import time
+
 ver = "#version 1.3.1"
 print(f"trader Version: {ver}")
-
-from library.open_api import *
-from PyQt5.QtWidgets import *
 
 logger.debug("trader start !!!!!!")
 
@@ -25,28 +28,29 @@ class Trader(QMainWindow):
 
         ################ 모의, 실전 ####################
         # 장시작 시간 설정
-        #self.market_start_time = QTime(9, 0, 0)
+        self.market_start_time = QTime(9, 0, 0)
         # 장마감 시간 설정
-        #self.market_end_time = QTime(15, 30, 0)
+        self.market_end_time = QTime(15, 30, 0)
         # 매수를 몇 시 까지 할지 설정. (시, 분, 초)
-        #self.buy_end_time = QTime(9, 6, 0)
+        self.buy_end_time = QTime(9, 6, 0)
 
         ############################################
 
         ################ 테스트용 ###################
         # 장시작 시간 설정
-        self.market_start_time = QTime(0, 0, 0)
-        # # 장마감 시간 설정
-        self.market_end_time = QTime(23, 59, 0)
-        # # 매수를 몇 시 까지 할지 설정. (시, 분, 초)
-        self.buy_end_time = QTime(23, 59, 0)
+        # self.market_start_time = QTime(0, 0, 0)
+        # # # 장마감 시간 설정
+        # self.market_end_time = QTime(23, 59, 0)
+        # # # 매수를 몇 시 까지 할지 설정. (시, 분, 초)
+        # # 매수를 넣던 매수를 넣던 모의투자라도 시간은 장시간과 똑같게 해야 한다. 
+        # self.buy_end_time = QTime(23, 59, 0)
 
         # ############################################
 
     # 매수를 하기 위한 함수
     def auto_trade_stock(self):
         logger.debug("auto_trade_stock함수에 들어왔습니다!")
-        self.open_api.get_today_buy_list()
+        self.open_api.get_today_buy_list_and_trade()
 
     # 매도 리스트를 가져온다
     def get_sell_list_trade(self):
@@ -58,6 +62,7 @@ class Trader(QMainWindow):
         # all_item_db에 rate를 업데이트 한다.
         self.open_api.rate_check()
         self.open_api.sf.get_date_for_simul()
+        # 업데이트 된 현재 데이터를 통해서 알고리즘에 들어맞는 매도 리스트를 가져온다. 
         self.sell_list = self.open_api.sf.get_sell_list(len(self.open_api.sf.date_rows))
         logger.debug("매도 리스트!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         logger.debug(self.sell_list)
@@ -83,28 +88,35 @@ class Trader(QMainWindow):
             # 매도 수량
             get_sell_num = self.open_api.get_holding_amount(get_sell_code)
 
-            if get_sell_num == False:
+            if not get_sell_num:
                 continue
 
             logger.debug("매도할 종목코드: !!" + str(get_sell_code))
             logger.debug("매도 수익률: !!" + str(get_sell_rate))
             logger.debug("매도 수량: !!" + str(get_sell_num))
 
-            if get_sell_code != False and get_sell_code != "0" and get_sell_code != 0:
+            if (get_sell_code and get_sell_code != "0" and get_sell_code != 0):
                 if get_sell_rate < 0:
-                    logger.debug("손절!!!!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ " + str(
-                        get_sell_code) + " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-                    self.open_api.send_order("send_order_req", "0101", self.open_api.account_number, 2, get_sell_code,
-                                             get_sell_num, 0, "03", "")
+                    logger.debug("손절!!!!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ " +
+                                 str(get_sell_code) + 
+                                 " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+                    self.open_api.send_order(
+                        "send_order_req", "0101", self.open_api.account_number, 2, get_sell_code,
+                        get_sell_num, 0, "03", ""
+                    )
                 else:
-                    logger.debug("익절 매도!!!!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ " + str(
-                        get_sell_code) + " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+                    logger.debug(
+                        "익절 매도!!!!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ " + 
+                        str(get_sell_code) + " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+                    )
                     # 03 : 시장가 매도
                     # 2 : 신규매도
                     # 0 : price 인데 시장가니까 0으로
                     # get_sell_num : 종목 보유 수량
-                    self.open_api.send_order("send_order_req", "0101", self.open_api.account_number, 2, get_sell_code,
-                                             get_sell_num, 0, "03", "")
+                    self.open_api.send_order(
+                        "send_order_req", "0101", self.open_api.account_number, 2, 
+                        get_sell_code, get_sell_num, 0, "03", ""
+                    )
 
             else:
                 print("code가 없다!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -151,9 +163,9 @@ class Trader(QMainWindow):
             if self.market_time_check():
                 # 우선 조건에 맞으면 매도
                 self.auto_trade_sell_stock()
-                # 1. 잔액이 있는지 여부 확인
-                # 2. 매수 하는 시간 인지 확인
-                # 3. 매수 정지 옵션이 체크 되었는지 확인
+                # 1. 잔액이 있는지 여부 확인 : jango_check()
+                # 2. 매수 하는 시간 인지 확인 : buy_time_check()
+                # 3. 매수 정지 옵션이 체크 되었는지 확인 (특정 상황으로 인해 매수하고 싶지 않은 날일 경우) : buy_check() 
                 if self.open_api.jango_check() and self.buy_time_check() and self.open_api.buy_check():
                     # 1,2,3 조건 모두 문제 없으면 매수 시작
                     self.auto_trade_stock()

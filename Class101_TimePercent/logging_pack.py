@@ -8,8 +8,11 @@ from logging.handlers import TimedRotatingFileHandler
 # jackbot.log 라는 이름으로 로그파일이 만들어진다.
 
 # log파일 위치와 로그 이름을 설정한다. (촬영 후 아래 수정 하였습니다.)
+# 현재 파일의 상위 디렉토리의 상위 디렉토리의 절대 경로 / log / jackbot.log
+# file_path = Class101_TimePercent/log/jackbot.log
 file_path = pathlib.Path(__file__).parent.parent.absolute() / 'log' / 'jackbot.log'
 
+# log 폴더가 없으면 생성
 os.makedirs(file_path.parents[0], exist_ok=True)  # 로그 폴더가 존재하는지 확인 후 없으면 생성
 
 # 로그 파일 더블클릭 -> 연결 프로그램 -> 메모장
@@ -41,7 +44,7 @@ file_handler.suffix = "%Y%m%d"
 logger.addHandler(stream_handler)
 logger.addHandler(file_handler)
 
-
+# print 함수처럼 콘솔창에도 메시지가 출력된다.
 # logger.debug('debug 모드!')
 # logger.info('info 모드!')
 # logger.warning('warning 모드!')

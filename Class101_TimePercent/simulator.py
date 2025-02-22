@@ -1,4 +1,4 @@
-from library.simulator_func_mysql import *
+from library.simulator_func_mysql import simulator_func_mysql
 
 
 class Simulator:
@@ -12,9 +12,12 @@ class Simulator:
         self.simul_num = int(input("시뮬레이팅 할 알고리즘 번호를 입력 하세요: "))
 
         # self.simul_reset 설정
-        #       'y'  :  self.simul_num 에서 설정한 번호에 해당 하는 시뮬레이터 데이터베이스를 초기화 하고 처음 부터 실행
-        #       'n' : self.simul_num 에서 설정한 번호에 해당 하는 시뮬레이터 데이터베이스를 초기화 하지 않고 이어서 실행
-        #                    ex) 2020년 01월 01일까지 시뮬레이터를 마쳤는데, 그 이후로 연달아서 2020년 01월 02일 부터 시뮬레이터 테스트를 하고 싶은 경우
+        #       'y'  :  self.simul_num 에서 설정한 번호에 해당 하는 시뮬레이터 데이터베이스를 초기화 하고
+        #               처음 부터 실행
+        #       'n' : self.simul_num 에서 설정한 번호에 해당 하는 시뮬레이터 데이터베이스를 초기화 하지 않고
+        #             이어서 실행
+        #             ex) 2020년 01월 01일까지 시뮬레이터를 마쳤는데, 그 이후로 연달아서 2020년 01월 02일 부터
+        #             시뮬레이터 테스트를 하고 싶은 경우
 
         option = str(input("시뮬레이팅 데이터베이스 초기화 여부 : (y or n) "))
 

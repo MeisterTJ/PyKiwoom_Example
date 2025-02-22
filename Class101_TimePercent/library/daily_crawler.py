@@ -1,6 +1,4 @@
-
-
-from .daily_craw_config import *
+from daily_craw_config import daily_craw_config
 
 
 class daily_crawler():

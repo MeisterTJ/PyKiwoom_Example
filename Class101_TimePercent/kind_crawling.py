@@ -14,6 +14,7 @@ from time import sleep
 
 import pandas as pd
 import pymysql
+
 #  selenium 이란 여러 언어에서 웹드라이버를 통해
 #  웹 자동화 테스트 혹은 웹 자동화를 도와주는 라이브러리
 from selenium import webdriver
@@ -21,6 +22,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from sqlalchemy import create_engine, VARCHAR, DATE
@@ -40,7 +42,7 @@ END = '\ue010'
 
 class KINDCrawler:
     def __init__(self, snapshot_dir_name='kind_snapshots', download_dir_name='KIND_xls'):
-        db_url = URL(
+        db_url = URL.create(
             drivername="mysql+mysqldb",
             username=cf.db_id,
             password=cf.db_passwd,
@@ -92,6 +94,7 @@ class KINDCrawler:
 
     # kind 사이트에 달력에 날짜를 설정하는 함수
     def date_select(self, start, end):
+        # find_element_by_css_selector 메서드는 더 이상 사용되지 않는다.
         selected_tag_a = self.driver.find_element_by_css_selector('input#startDate')
         selected_tag_a.click()
 
@@ -241,7 +244,9 @@ class KINDCrawler:
         path = self.chrome_driver_update() # 크롬 드라이버를 자동으로 path 위치에 설치합니다
 
         '''자동으로 크롬드라이버가 설치 되도록 업데이트 되었습니다. 따로 C드라이브에 크롬드라이버를 설치 하지 않으셔도 됩니다.'''
-        self.driver = webdriver.Chrome(path, options=options)
+        # Service 인수를 사용해야 하는듯?
+        service = Service(executable_path=path)
+        self.driver = webdriver.Chrome(service=service, options=options)
         self.driver.implicitly_wait(10)  # get(url)로 요청한 페이지 내용들이 모두 로딩이 완료될 때까지 int(초) 만큼 암묵적으로 기다린다
 
         self.actions = ActionChains(self.driver)  # 스크롤 이동을 위한 ActionChains 객체
@@ -309,6 +314,7 @@ class KINDCrawler:
     def take_snapshot(self, filename):
         self.driver.save_screenshot(str(self.snapshot_path / filename))
 
+    # 크롬 드라이버 자동설치
     def chrome_driver_update(self):
         print("chrome_driver_update..")
         update = True
@@ -333,6 +339,7 @@ class KINDCrawler:
 
         print("chrome_driver_update 완료!")
         return path
+    
 if __name__ == "__main__":
     client = KINDCrawler()
     client.craw()

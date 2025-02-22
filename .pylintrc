@@ -1,0 +1,14 @@
+[MASTER]
+disable=C0114,C0115,C0116
+
+[MESSAGES CONTROL]
+disable=C0111,E0611
+
+[MASTER]
+disable=C0114 # missing-module-docstring
+disable=C0115 # missing-class-docstring
+disable=C0116 # missing-function-docstring
+
+[MESSAGES CONTROL]
+disable=C0111 # 일반적인 docstring이 없을 때 발생하는 경고를 비활성화한다.
+disable=E0611 # 모듈 임포트 에러를 비활성화한다
