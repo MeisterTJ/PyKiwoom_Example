@@ -21,8 +21,6 @@
 
 import datetime
 import warnings
-warnings.simplefilter(action='ignore', category=UserWarning)
-
 import dart_fss as dart
 import pymysql
 import sqlalchemy
@@ -30,9 +28,9 @@ from dart_fss.errors import NoDataReceived
 from pandas import DataFrame
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
-
 from library import cf
 
+warnings.simplefilter(action='ignore', category=UserWarning)
 pymysql.install_as_MySQLdb()
 
 
@@ -44,7 +42,8 @@ class DARTApi:
             password=cf.db_passwd,
             host=cf.db_ip,
             port=cf.db_port,
-            database='daily_buy_list'
+            database='daily_buy_list',
+            query={}
         )
         self.db_engine = create_engine(db_url)
         # 자신의 Dart API 인증키 입력
