@@ -241,7 +241,7 @@ class simul_scraper():
             # print("cols", cols)
             # 순서변경
             jango_temp = jango_temp[cols]
-
+ 
             jango_temp.to_sql('ranking', self.engine_simul_scrap, if_exists='replace')
             print("simul scrap success!")
 

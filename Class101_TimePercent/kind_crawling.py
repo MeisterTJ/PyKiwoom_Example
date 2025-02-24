@@ -1,6 +1,3 @@
-ver = "#version 1.5.0"
-print(f"kind_crawling Version: {ver}")
-
 # 강의에서 패러럴즈 관련 내용은 패치하여 문제없이 작동하게 만들었으니 무시하셔도 괜찮습니다.
 # 엑셀 파일의 저장 위치는 기존 다운로드 폴더에서 bot 프로젝트 폴더안의 KIND_xls로 변경 되었습니다.
 # 크롬드라이버설치 위치 C:chromedriver/chromedrive.exe => 자동으로 크롬드라이버가 설치 되도록 업데이트 되었습니다. 따로 C드라이브에 설치 하지 않으셔도 됩니다.
@@ -31,6 +28,9 @@ from sqlalchemy.exc import InternalError, OperationalError
 
 from library import cf
 
+ver = "#version 1.5.0"
+print(f"kind_crawling Version: {ver}")
+
 pymysql.install_as_MySQLdb()
 
 
@@ -52,6 +52,7 @@ class KINDCrawler:
         )
         self.db_engine = create_engine(db_url)
         self.variable_setting()
+        # 파일의 현재 위치에서 kind_snapshots, KIND_xls 폴더를 생성할 예정이다. 
         self.snapshot_path = pathlib.Path(__file__).parent.absolute() / snapshot_dir_name
         self.download_path = pathlib.Path(__file__).parent.absolute() / download_dir_name
 
@@ -72,10 +73,11 @@ class KINDCrawler:
             sys.exit(1)
 
     def variable_setting(self):
+        # 투자 + 두글자 + 종목 + 아무거나 + .xls
         self.FNAME_PATTERN = '투자??종목*.xls'
         # 2007년 이전에는 kind 상에 데이터 없다.
         # 크롤링 시작일
-        self.DEFAULT_START_DATE = datetime.date(2007, 1, 1)
+        self.DEFAULT_START_DATE = datetime.date(2024, 1, 1)
         # 엑셀에서 5000개만 담을 수 있어서 100일 단위로 조회하여 데이터를 불러옴
         self.rotate_period = 100
 
@@ -89,31 +91,38 @@ class KINDCrawler:
 
     # 현재 다운로드 폴더 안에 있는 엑셀파일을 삭제
     def clean_excel(self):
-        for fname in self.download_path.glob(self.FNAME_PATTERN):
-            os.remove(fname)
+        # FNAME_PATTERN에 해당하는 모든 파일 풀 경로를 삭제 
+        for fFullPath in self.download_path.glob(self.FNAME_PATTERN):
+            os.remove(fFullPath)
 
     # kind 사이트에 달력에 날짜를 설정하는 함수
     def date_select(self, start, end):
         # find_element_by_css_selector 메서드는 더 이상 사용되지 않는다.
-        selected_tag_a = self.driver.find_element_by_css_selector('input#startDate')
+        # input이라는 tag의 startdata를 선택한다. 
+        selected_tag_a = self.driver.find_element(By.CSS_SELECTOR, 'input#startDate')
         selected_tag_a.click()
 
         # 칸에서 가장 끝으로 이동
-        selected_tag_a.send_keys(Keys.END)
+        # selected_tag_a.send_keys(Keys.END)
 
         # kind 사이트의 날짜를 하나씩 지우는 로직
-        for i in range(1, 12):
-            # Keys 선언으로 가면 관련 코드 다 나와있다 (ctrl + keys 클릭)
-            selected_tag_a.send_keys(Keys.BACKSPACE)
+        # 백스페이스로 하나씩 글자가 사라지는 것을 실시간으로 볼 수 있다. 이렇게 안하고 그냥 지울수도 있지 않나?
+        # for i in range(1, 12):
+        #     # Keys 선언으로 가면 관련 코드 다 나와있다 (ctrl + keys 클릭)
+        #     selected_tag_a.send_keys(Keys.BACKSPACE)
+        # 입력 필드를 비운다.
+        selected_tag_a.clear()
         selected_tag_a.send_keys(start.strftime('%Y%m%d'))
 
-        selected_tag_a = self.driver.find_element_by_css_selector('input#endDate')
+        selected_tag_a = self.driver.find_element(By.CSS_SELECTOR, 'input#endDate')
         selected_tag_a.click()
 
-        selected_tag_a.send_keys(Keys.END)
+        # selected_tag_a.send_keys(Keys.END)
 
-        for i in range(1, 12):
-            selected_tag_a.send_keys(Keys.BACKSPACE)
+        # for i in range(1, 12):
+        #     selected_tag_a.send_keys(Keys.BACKSPACE)
+        # 입력 필드를 비운다.
+        selected_tag_a.clear()
         selected_tag_a.send_keys(end.strftime('%Y%m%d'))
 
     def is_simul_table_exist(self, table_name):
@@ -128,16 +137,17 @@ class KINDCrawler:
     def insert_to(self, file_name, table_name):
         print("insert {} into {}".format(file_name, table_name))
         # kind 검색(윈도우 사이즈
-        element = self.driver.find_element_by_xpath('//*[@id="searchForm"]/section/div/div[3]/a[1]')
+        # find_element_by_xpath 도 더 이상 사용하지 않는다. 
+        element = self.driver.find_element(By.XPATH, '//*[@id="searchForm"]/section/div/div[3]/a[1]')
 
-        self.driver.execute_script('arguments[0].scrollIntoView(true);', element) # 사이트 포지션 이동
-        self.driver.execute_script('window.scrollBy(100, 0)') # 사이트 포지션 이동
-        self.take_snapshot('before_search.png') # 디버깅용 snapshot (bot / kind_snapshots 폴더에 저장)
+        self.driver.execute_script('arguments[0].scrollIntoView(true);', element)  # 사이트 포지션 이동
+        self.driver.execute_script('window.scrollBy(100, 0)')  # 사이트 포지션 이동
+        self.take_snapshot('before_search.png')  # 디버깅용 snapshot (bot / kind_snapshots 폴더에 저장)
         element.send_keys((Keys.ENTER))
-        self.dialog_block_wait() #로딩이 끝나는 순간까지 대기
+        self.dialog_block_wait()  # 로딩이 끝나는 순간까지 대기
 
         # kind 엑셀다운로드 (촬영 후 Enter를 click으로 변경 했습니다.)
-        element = self.driver.find_element_by_xpath('//*[@id="searchForm"]/section/div/div[3]/a[2]')
+        element = self.driver.find_element(By.XPATH, '//*[@id="searchForm"]/section/div/div[3]/a[2]')
         self.driver.execute_script('arguments[0].scrollIntoView(true);', element)
         self.driver.execute_script('window.scrollBy(100, 0)')
         self.take_snapshot('before_click.png')
@@ -157,7 +167,6 @@ class KINDCrawler:
         # 촬영 후 코드가 수정 되었지만 영상 후반에 설명이 나옵니다~
         # 엑셀 파일이 비어 있는 경우 code 컬럼에 '결과값이 없습니다' 라는 내용이 들어가 있다. 아래는 이러한 경우를 제외하는 로직
         df = df[df.종목코드 != '결과값이 없습니다.']
-
 
         # 만약에 df(데이터프레임)에 '해제일'이라는 컬럼이 있는 경우(투자경고, 투자위험 종목)
         if '해제일' in df.columns:
@@ -205,16 +214,21 @@ class KINDCrawler:
     # crawling하고, db에 넣는 함수
     def crawl_and_insert(self, file_name, table_name):
         # 달력이 종목 탭을 가려서 탭(투자위험종목 등) 클릭을 못하는 경우를 방지
-        search_bar = self.driver.find_element_by_css_selector('#AKCKwd')
-        self.driver.execute_script('arguments[0].scrollIntoView(true);', search_bar) #추가 코드. 클릭 할 위치로 scroll
-        search_bar.click() #클릭
+        # search_bar의 id가 AKCKwd로 되어 있는 것을 알 수 있다. (#이 id 선택인듯?)
+        search_bar = self.driver.find_element(By.CSS_SELECTOR, '#AKCKwd')
+        # 추가 코드. 클릭 할 위치로 scroll
+        self.driver.execute_script('arguments[0].scrollIntoView(true);', search_bar)  
+        # 회사명 검색 바를 클릭한다. (그렇게 해서 달력이 사라지도록 하는 것인 듯.)
+        search_bar.click()  
 
-        selected_tab = self.driver.find_element_by_css_selector('a[title="{}"]'.format(file_name.split('.')[0]))
-        self.actions.move_to_element(search_bar) # 추가 코드. 클릭 할 위치로 scroll
-        self.driver.execute_script('window.scrollBy(100, 0)') # 추가 코드. 클릭 할 위치로 scroll
-        selected_tab.click() # 클릭
-        self.dialog_block_wait() # 대기
-        self.take_snapshot("b-dateinput.png") #캡처(디버깅용)
+        # 투자주의종목, 투자경고종목, 투자위험종목 등 각 탭을 찾는다.
+        selected_tab = self.driver.find_element(By.CSS_SELECTOR, 'a[title="{}"]'.format(file_name.split('.')[0]))
+        self.actions.move_to_element(search_bar)  # 추가 코드. 클릭 할 위치로 scroll
+        self.driver.execute_script('window.scrollBy(100, 0)')  # 추가 코드. 클릭 할 위치로 scroll
+        # 선택한 탭을 클릭한다.
+        selected_tab.click()
+        self.dialog_block_wait()  # 대기
+        self.take_snapshot("b-dateinput.png")  # 캡처(디버깅용)
 
         # 마지막 post날짜 가져와서 1일을 더해준다.
         start_date = self.get_last_date_from(table_name) + timedelta(1)
@@ -241,7 +255,7 @@ class KINDCrawler:
         # Selenium이 띄운 크롬창의 다운로드 폴더 경로를 지정 (bot 프로젝트 폴더안의 KIND_xls 폴더)
         options.add_experimental_option("prefs", {"download.default_directory": str(self.download_path)})
 
-        path = self.chrome_driver_update() # 크롬 드라이버를 자동으로 path 위치에 설치합니다
+        path = self.chrome_driver_update()  # 크롬 드라이버를 자동으로 path 위치에 설치합니다
 
         '''자동으로 크롬드라이버가 설치 되도록 업데이트 되었습니다. 따로 C드라이브에 크롬드라이버를 설치 하지 않으셔도 됩니다.'''
         # Service 인수를 사용해야 하는듯?
@@ -268,10 +282,10 @@ class KINDCrawler:
 
         # kind 사이트로 접속
         self.driver.get('http://kind.krx.co.kr/investwarn/investattentwarnrisky.do?method=investattentwarnriskyMain')
-        self.dialog_block_wait() # 대기
-        self.take_snapshot("b-candi.png") # 디버깅용 캡처처
+        self.dialog_block_wait()  # 대기
+        self.take_snapshot("b-candi.png")  # 디버깅용 캡처처
 
-       # 투자주의 / 투자경고 / 투자위험종목 리스트
+        # 투자주의 / 투자경고 / 투자위험종목 리스트
         # 순서 : 투자주의종목-> 투자경고종목 -> 투자위험종목
         # ( ) 안에는 각각의 엑셀이름과 테이블 이름을 명시
         insert_table_names = [('투자주의종목.xls', 'stock_invest_caution'),
@@ -288,6 +302,9 @@ class KINDCrawler:
             else:
                 self.rotate_period = 100
 
+            # 투자주의종목, 투자경고종목, 투자위험종목을 순서대로 크롤링하고 db에 넣는다.
+            # *는 리스트나 튜플의 각 요소를 개별 인수로 전달한다. 
+            # 투자주의종목.xls : file_name, stock_invest_caution : table_name
             self.crawl_and_insert(*names)
 
         # chrome 브라우저 닫기
@@ -332,14 +349,14 @@ class KINDCrawler:
             print(f"성공적으로 {package_name} 패키지를 설치 했습니다")
 
         import chromedriver_autoinstaller
-        path = chromedriver_autoinstaller.install()  # Check if the current version of chromedriver exists
-                                              # and if it doesn't exist, download it automatically,
-                                              # then add chromedriver to path
-
-
+        # Check if the current version of chromedriver exists                           
+        # and if it doesn't exist, download it automatically,
+        # then add chromedriver to path        
+        path = chromedriver_autoinstaller.install()  
         print("chrome_driver_update 완료!")
         return path
-    
+
+
 if __name__ == "__main__":
     client = KINDCrawler()
     client.craw()
