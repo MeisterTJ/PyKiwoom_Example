@@ -151,13 +151,14 @@ class KINDCrawler:
         self.driver.execute_script('arguments[0].scrollIntoView(true);', element)
         self.driver.execute_script('window.scrollBy(100, 0)')
         self.take_snapshot('before_click.png')
+        # 엑셀 다운 버튼 클릭
         element.click()
 
         # 파일이 다 다운될 때 까지 대기(촬영 후 아래 while문 추가 하였습니다.)
         while not list(self.download_path.glob(self.FNAME_PATTERN)):
             sleep(1)
 
-        # 엑셀 데이터를 가져온다.
+        # 엑셀 데이터를 가져온다. read_html로 엑셀 파일을 읽을 수 있나?
         df = pd.read_html(
             str(self.download_path / file_name),
             header=0,
@@ -175,6 +176,7 @@ class KINDCrawler:
 
         if len(df):
             del df['번호']
+            # rename 함수는 실제로 그 컬럼이 없어도 상관 없다. 있을 경우 오른쪽에 있는 이름으로 변경한다. 
             df = df.rename(columns={
                 '종목코드': 'code',
                 '종목명': 'code_name',
@@ -183,7 +185,8 @@ class KINDCrawler:
                 '유형': 'type',
                 '해제일': 'cleared_date'
             })
-
+             
+            # db_engine에 집어 넣는다. 
             df.to_sql(
                 table_name,
                 self.db_engine, if_exists='append',
@@ -270,6 +273,7 @@ class KINDCrawler:
         # 의 경우는 항상 테이블을 삭제해준다.
         # 이유는 투자주의 종목과 다르게
         # 투자경고, 투자위험 종목은 엑셀파일에 '해제일' 컬럼이 있다. 따라서 매번 '해제일'을 업데이트 해줘야 하기 때문에
+        # 해제일이 갱신이 되는데, 이걸 각 종목마다 할 바에야 테이블을 삭제하고 다시 받아오는게 더 효율적이다.   
         # db를 삭제하고 다시 받아온다.
         # try, except 의 경우 혹시라도
         # stock_invest_warning, stock_invest_danger 테이블이 없을 경우 sql문을 실행하면 에러가 발생하기 때문에
