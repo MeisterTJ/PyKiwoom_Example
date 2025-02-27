@@ -284,7 +284,7 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
 
 # 매도함수
       # # 절대 모멘텀 전략 (특정일 전 보다 n% 이하로 떨어지면 매도) / code 버전
-     #    elif self.sell_list_num == 4:
+     #    elif self.sell_algo_num == 4:
      #        sell_list = []
      #        sql = "SELECT code, rate, present_price, valuation_profit FROM all_item_db WHERE sell_date = 0 " \
      #              "group by code"
@@ -306,7 +306,7 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
      #                    sell_list.append(row)
      #
      #    # 절대 모멘텀 전략 (특정일 전 보다 n% 이하로 떨어지면 매도) / query 버전
-     #    elif self.sell_list_num == 5:
+     #    elif self.sell_algo_num == 5:
      #        date_before = self.date_rows[i - self.day_before][0]
      #        sql = "SELECT ALLDB.code, ALLDB.rate, ALLDB.present_price, ALLDB.valuation_profit " \
      #              "FROM all_item_db ALLDB, daily_buy_list.`" + date_before + "` BEFORE_DAY "\
@@ -316,7 +316,7 @@ ORDER BY (YES_DAY.close - BEFORE_DAY.close) / BEFORE_DAY.close * 100 DESC;
      #        sell_list = self.engine_simulator.execute(sql % (self.diff_point * (-1))).fetchall()
      #
      #    # 절대 모멘텀 전략 + losscut_point 추가 (특정일 전 보다 n% 이하로 떨어지면 매도) / query 버전
-     #    elif self.sell_list_num == 6:
+     #    elif self.sell_algo_num == 6:
      #        date_before = self.date_rows[i - self.day_before][0]
      #        sql = "SELECT ALLDB.code, ALLDB.rate, ALLDB.present_price, ALLDB.valuation_profit " \
      #              "FROM all_item_db ALLDB, daily_buy_list.`" + date_before + "` BEFORE_DAY " \
