@@ -21,6 +21,9 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 from library import cf
 
+# 로깅 설정을 위한 로거 객체 생성
+# 이 로거는 현재 모듈의 이름으로 생성되며, 로그 메시지를 기록하는 데 사용됩니다.
+# 나중에 이 로거를 통해 디버깅, 정보, 경고, 오류 등의 메시지를 출력할 수 있습니다.
 logger = logging.getLogger(__name__)
 is_64bits = sys.maxsize > 2**32
 if not is_64bits:
