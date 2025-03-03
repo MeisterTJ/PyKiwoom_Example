@@ -1,3 +1,5 @@
+# 시계열 예측을 위한 유틸리티 함수들을 모아놓은 모듈이다.
+# Stock Price Prediction Model
 import sys
 import logging
 
@@ -24,8 +26,11 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 class DataNotEnough(BaseException):
     pass
 
+
 # 학습 함수
 def train(data, model, n_epochs=400, batch_size=64, verbose=0):
+    # 과적합을 방지하고 불필요한 학습을 막기 위한 콜백 기능이다.
+    # 불필요한 학습을 방지 혹은 과적합되기 직전의 최적 상태에서 학습을 중단 한다. 
     early_stopping = EarlyStopping(monitor='val_loss', patience=50)  # 50번이상 더 좋은 결과가 없으면 학습을 멈춤
 
     # verbose 옵션은 실행 과정을 콘솔에 띄워줄지 말지에 대한 옵션
@@ -39,14 +44,17 @@ def train(data, model, n_epochs=400, batch_size=64, verbose=0):
 
     return history
 
+
 # 에러 평가 함수
 def evaluate(data, model):
     mse, mae = model.evaluate(data["X_test"], data["y_test"], verbose=0)
     mean_absolute_error = data["column_scaler"]["close"].inverse_transform([[mae]])[0][0]
     return mean_absolute_error
 
-# 예측 주가를 계산 해주는 함수
+
+# 학습된 모델을 사용하여 미래 값을 예측한다.
 def predict(data, model, n_steps=100):
+    # 마지막 시퀀스 가져오기. 
     last_sequence = data["last_sequence"][-n_steps:]
     column_scaler = data["column_scaler"]
     # last_sequence를 reshape 합니다
@@ -60,7 +68,9 @@ def predict(data, model, n_steps=100):
 
     return predicted_price
 
+
 # 스케일링 and "X_train", "X_test", "y_train", "y_test" 추출 함수
+# 데이터프레임을 입력받아 시계열 예측을 위한 형태로 변환한다. 
 def load_data(df, n_steps=100, lookup_step=1, test_size=0.2, shuffle=True):
     # return 해줘야 할 모든 값들은 result 변수에 넣을 예정
     result = {}
@@ -116,22 +126,27 @@ def load_data(df, n_steps=100, lookup_step=1, test_size=0.2, shuffle=True):
 
     return result
 
+
 # 모델 생성 함수
 def create_model(units=50, dropout=0.3, n_steps=100, loss='mae', optimizer='adam', n_layers=4, cell=LSTM):
     model = Sequential()
     for i in range(n_layers):
         if i == 0:
+            # 첫 번째 레이어
             model.add(cell(units, return_sequences=True, input_shape=(None, n_steps)))
         elif i == n_layers - 1:  # 마지막 layer
             model.add(cell(units))
         else:
+            # 중간 레이어
             model.add(cell(units, return_sequences=True))
-        # 매 layer마다 dropout을 해줌
+        # 매 layer마다 dropout을 해줌 (과적합 방지?)
         model.add(Dropout(dropout))
+    # 하나의 값을 출력하는 Dense layer
     model.add(Dense(1))
     model.compile(loss=loss, metrics=[loss], optimizer=optimizer)
 
     return model
+
 
 # 그래프 출력 함수
 def plot_graph(model, data):

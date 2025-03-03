@@ -34,17 +34,14 @@ from math import sqrt
 a2 = sqrt(9)
 print(a2)
 
-
-
 print("\n*************************************ex3*************************************")
 # math 모듈에는 수많은 함수들이 미리 정의가 되어있는데 그 중 모든 함수, 변수, 클래스 를 참조 하고 싶을 경우(* 쓰는 건 최대한 지양해야함)
 
 # from 모듈 import *
-from math import *
+from math import sqrt
 # sqrt 앞에 math. 을 쓰지 않아도 바로 사용 가능
 a3 = sqrt(9)
 print(a3)
-
 
 print("\n*************************************ex4*************************************")
 # from 모듈 import 변수 as 이름
@@ -54,17 +51,13 @@ from math import sqrt as sq
 a4 = sq(9)
 print(a4)
 
-
 print("\n*************************************ex5*************************************")
 # 패키지 만들기 실습(package_test.py 파일 및 my_package 패키지 생성 후 실습)
 # from 패키지 import 모듈 (ex. from my_package import sum)
 
-
 # from 패키지.모듈 import 함수, 클래스 (ex. from my_package.sum import sum_ab)
 
 # __name__ ? => 현재 모듈의 이름을 담고 있는 내장 변수
-
-
 
 # 이어지는 수업에서 설명
 print("\n*************************************ex6*************************************")

@@ -81,23 +81,30 @@ df_temp = df[['volume', 'close']].values
 # LSTM이 좀 더 익숙한 형태로 전달을 해주기 위해서 사용한다. 
 # 정규화를 하지 않으면 큰 값을 가진 feature(거래량)이 작은 값을 가진 feature(종가)보다 영향을 많이 미칠 수 있다.
 scaler = MinMaxScaler()
+# 2차원 배열이다. 
 sc_df = scaler.fit_transform(df_temp)
 
 N_STEPS = 5  # 시퀀스 데이터를 몇개씩 담을지 설정.
              # 5개씩 데이터를 넣겠다(lstm은 시퀀스 데이터를 다루는 모델이라 여러개의 값을 넣는것 )
 
+# X에는 연속된 5개의 데이터 포인트(거래량과 종가)가 지정된다.
+# Y에는 X 다음에 오는 종가 값이 저장된다. 
+# 이렇게 생성된 데이터는 "과거 5일간의 거래량과 종가를 보고 다음 날의 종가를 예측하는" LSTM 모델을 훈련시키는 데 사용된다. 
 X = []
 Y = []
+
 # X에는 0~4까지 담고, 1~5까지 담고 ... => 시퀀스
 # y에는 5 번째 close, 6번째 close ....
 # 시퀀스(Sequence) : 시퀀스란 데이터를 순서대로 하나씩 나열하여 나타낸 데이터 구조
 for i in range(len(sc_df) - N_STEPS):
-    # 시퀀스 데이터(문제지)
+    # 시퀀스 데이터(문제지), X는 2차원 데이터들의 리스트가 된다. 
     X.append(sc_df[i: i + N_STEPS])
     # 결과값(정답지)
     Y.append(sc_df[i + N_STEPS, [1]])
 
-
+# 리스트를 ai에 적합한 numpy 배열로 변환한다. 
+# 이때 자동으로 3차원 배열 구조가 형성된다.
+# 최종 형태 : [9092(샘플 수), 5(N_STEPS), 2(features)]
 X = np.array(X)
 Y = np.array(Y)
 
@@ -107,6 +114,11 @@ Y = np.array(Y)
 # shuffle = False : 시퀀스 데이터의 순서를 섞지 않겠다.
 
 # len(X)*0.2  /  len(X_test) 비교
+# train_test_split 함수는 scikit-learn 라이브러리에서 제공하는 함수로, 데이터셋을 훈련용과 테스트용으로 나누는 데 사용된다. 
+# 전체 데이터의 20%를 테스트 세트로 사용하고, 데이터를 섞지 않는다. (시계열 데이터의 순서를 유지하기 위함.)
+# X_train : 훈련용 입력 데이터 (전체 데이터의 80%), X_test : 테스트용 입력 데이터 (전체 데이터의 20%)
+# y_train : 훈련용 출력 데이터 (전체 데이터의 80%), y_test : 테스트용 출력 데이터 (전체 데이터의 20%)
+# 분할된 데이터는 모델 훈련(80%)와 성능 평가(20%)에 각각 사용된다. 
 X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, shuffle=False)
 
 # X_train.shape => [9092, 5, 2]
@@ -135,8 +147,9 @@ model.add(LSTM(units=32, input_shape=X_train.shape[1:]))
 # Dense : 출력층 값이 1개가 나온다. 우리가 예측한 주가, 이것을 통해서 오차를 구하고 학습을 해서 모델을 만드는 것
 model.add(Dense(units=1))
 
+# (Mean Absolute Error) 손실 함수와 Adam 옵티마이저로 모델을 컴파일한다. 
 model.compile(loss='mae', optimizer='adam')
-# X_train, y_train은 train할 데이터, X_test, y_test는 실제로 테스트 할 데이터
+# X_train, y_train은 train할 데이터, X_test, y_test는 검증 할 데이터
 # epochs : 몇번 테스트를 할 것인지
 # batch_size: 각 학습 반복에 사용할 데이터 샘플 수
 #             ex) 1000개 데이터를 batch_size =10로 설정하면, 100개의 step을 통해 1epoch를 도는 것
@@ -153,6 +166,8 @@ plt.plot(pred_y.ravel(), 'r-', label='pred_y')
 # y_test는 실제 값
 plt.plot(y_test.ravel(), 'b-', label='y_test')
 # plt.plot((pred_y-y_test).ravel(), 'g-', label = 'diff*10')
+
+# 결국 pred_y(예측한 값) test_y(실제 값) 을 비교해서 모델의 학습이 얼마나 잘 되었는지를 보려는 것이다. 
 
 plt.legend()  # 범례 표시
 plt.title("samsung")
