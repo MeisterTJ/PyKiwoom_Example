@@ -795,6 +795,8 @@ class simulator_func_mysql:
                 # 영상 촬영 후 추가 된 코드입니다. AI챕터에서 다룰 예정입니다.
                 if self.use_ai:
                     from ai_filter import ai_filter
+                    # 기존 로직은 그대로 사용을 하되 ai_filter를 통해서 오를 것 같지 않은 종목들을 추가로 필터링한다. 
+                    # ai_filter를 통해서 나온 필터 결과들을 daily_buy_list db에서 삭제한다. 
                     ai_filter(self.ai_filter_num, engine=self.engine_simulator, until=date_rows_yesterday)
 
                 # 최종적으로 realtime_daily_buy_list 테이블에 저장 된 종목들을 가져와서 멤버에 넣는다.
