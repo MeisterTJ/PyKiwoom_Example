@@ -188,7 +188,7 @@ class simulator_func_mysql:
                     # 매도 리스트 설정 알고리즘 번호 (절대모멘텀 query ver)
                     self.sell_list_num = 5
         
-                elif self.simul_num == 9 :
+                elif self.simul_num == 9:
                     # 매수 리스트 설정 알고리즘 번호 (절대모멘텀 query ver)
                     self.db_to_realtime_daily_buy_algo_num = 8
                     # 매도 리스트 설정 알고리즘 번호 (절대모멘텀 query ver + losscut point 추가)
@@ -692,10 +692,12 @@ class simulator_func_mysql:
                     date_before = self.date_rows[i - 1 - self.day_before][0]
                     # 어제 일자 기준 n 일전 종가
                     date_before_close = self.get_now_close_price_by_date(code, date_before)
+                    # n 일전 종가가 0이 아니고 값이 있을 경우
                     if date_before_close != 0 and date_before_close != False:
                         # 모멘텀 계산 : n일전 종가 대비 수익률
                         diff_point_calc = (yes_close - date_before_close) / date_before_close * 100
                         # 모멘텀(수익률)이 self.diff_point 보다 높을 경우 realtime_daily_buy_list에 append
+                        # 모멘텀이 오르는 주식은 더 오른다에 기초하기 때문에 높이 오른 주식을 매수한다. 
                         if diff_point_calc > self.diff_point:
                             realtime_daily_buy_list.append(row)
         
@@ -716,6 +718,8 @@ class simulator_func_mysql:
                         "AND YES_DAY.close < '%s'"
                 realtime_daily_buy_list = self.engine_daily_buy_list.execute(sql % (self.diff_point, self.invest_unit)).fetchall()
         # 상대 모멘텀 전략 : 특정일 전의 종가 보다 n% 이상 상승한 종목 중 가장 많이 상승한 종목 순으로 매수 (내림차순) (query version)
+        # 절대 모멘텀과 다른 점은 ORDER BY 하나가 추가된 것이다. 모멘텀 순으로 정렬을 해준다.
+        # 100을 곱하는 이유는 수익률을 백분율로 표현하기 위해서이다.
         elif self.db_to_realtime_daily_buy_algo_num == 9:
             if i < self.day_before + 1:
                 realtime_daily_buy_list = []

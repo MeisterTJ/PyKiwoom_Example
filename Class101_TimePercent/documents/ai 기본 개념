@@ -40,7 +40,7 @@
 
  - LSTM : 딥러닝 모델 중 하나
     > 우리는 LSTM(Long Short Term Memory) 모델을 사용
-    > LSTM을 사용하려는 이유는 주가 데이터가 순서가 있는 시계열(Time-series) 데이터이기 때문
+    > LSTM을 사용하려는 이유는 주가 데이터가 순서가 있는 시계열(Time-series) 데이터이기 때문!
     > LSTM은 RNN(Recurrent Neural Network)의 일종입니다. RNN은 학습을 할 때 현재 입력값뿐만 아니라
       이전에 들어온 입력값을 함께 고려하기 때문에 시계열 데이터를 학습하기에 적합
     > keras 라이브러리로 구현 가능

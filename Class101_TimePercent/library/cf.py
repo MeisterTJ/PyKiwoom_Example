@@ -1,14 +1,14 @@
 # https://wikidocs.net/book/4652
 
 # db 계정
-db_id='chogdak' # [mysql ID를 넣어주세요]
+db_id = 'chogdak'  # [mysql ID를 넣어주세요]
 # db ip
-db_ip='localhost'
+db_ip = 'localhost'
 # db 패스워드
-db_passwd='900211c!' # [mysql password 를 넣어주세요]
+db_passwd = '900211c!'  # [mysql password 를 넣어주세요]
 
 # db port가 3306이 아닌 다른 port를 사용 하시는 분은 아래 변수에 포트에 맞게 수정하셔야합니다.
-db_port='3306'
+db_port = '3306'
 
 # 모의 투자 계좌번호를 넣는다. 모의 투자 계좌는 3개월에 한번씩 만료 되기 때문에 3개월 이용 후 재신청 하게 되면 계좌 번호가 변경된다.
 # 이때 계정이 존재 하지 않는다!!! 는 에러가 뜰텐데 그때 변경 된 계좌번호를 다시 아래 imi1_account 변수에 넣으면 된다.
