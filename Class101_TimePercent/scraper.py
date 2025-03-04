@@ -1,7 +1,5 @@
-
 from pandas import DataFrame
 import sys
-
 import datetime
 from sqlalchemy import create_engine
 import library.cf
@@ -11,7 +9,6 @@ import pymysql.cursors
 
 pymysql.install_as_MySQLdb()
 import MySQLdb
-
 
 
 # jango_data 테이블 이외 추가 컬럼 설명
@@ -73,15 +70,14 @@ class simul_scraper():
         # ranking 테이블을 수익률 순 재정렬
         self.set_orderby_scraped_db()
 
-
     # 데이터 베이스를 만드는 함수
-    def create_database(self,db_name):
+    def create_database(self, db_name):
         print("create_database!!! {}".format(db_name))
         sql = 'CREATE DATABASE {}'
         self.db_conn.cursor().execute(sql.format(db_name))
 
     # 봇 데이터 베이스 존재 여부 확인 함수
-    def is_database_exist(self,db_name):
+    def is_database_exist(self, db_name):
         sql = "SELECT 1 FROM Information_schema.SCHEMATA WHERE SCHEMA_NAME = '{}'"
         rows = self.db_conn.cursor().execute(sql.format(db_name))
         if rows:
@@ -99,8 +95,6 @@ class simul_scraper():
             encoding='utf-8')
         sql = "SELECT date from jango_data order by date desc limit 1"
         return self.engine_start_db.execute(sql).fetchall()[0][0]
-
-
 
     # simul_scrap에 jango_data 테이블이 있는지 확인
     def is_scrap_table_exist(self, table_name):
@@ -121,6 +115,7 @@ class simul_scraper():
             return True
         else:
             return False
+
     # 데이터프레임을 만들 때 사용할 컬럼 리스트 설정
     def set_jango_list(self):
         self.jango_list = ['account', 'date', 'today_earning_rate', 'sum_valuation_profit', 'total_profit',
@@ -128,8 +123,8 @@ class simul_scraper():
                            'today_profitcut_count', 'today_losscut_count', 'today_profitcut', 'today_losscut',
                            'd2_deposit', 'total_possess_count', 'today_buy_count', 'today_buy_list_count',
                            'today_reinvest_count',
-                           'today_cant_reinvest_count'
-                            , 'total_asset',
+                           'today_cant_reinvest_count', 
+                           'total_asset',
                            'total_invest',
                            'sum_item_total_purchase', 'total_evaluation', 'today_rate',
                            'today_invest_price', 'today_reinvest_price',
@@ -163,8 +158,8 @@ class simul_scraper():
                                 'today_profitcut_count', 'today_losscut_count', 'today_profitcut', 'today_losscut',
                                 'd2_deposit', 'total_possess_count', 'today_buy_count', 'today_buy_list_count',
                                 'today_reinvest_count',
-                                'today_cant_reinvest_count'
-                                , 'total_asset',
+                                'today_cant_reinvest_count', 
+                                'total_asset',
                                 'total_invest',
                                 'sum_item_total_purchase', 'total_evaluation', 'today_rate',
                                 'today_invest_price', 'today_reinvest_price',
